@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Repeat, ArrowRight } from 'lucide-react';
-import { Layout } from '@/components/layout/Layout';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { GAMES } from '@/data/games';
@@ -35,8 +34,7 @@ export function SensitivityConverterPage() {
   };
 
   return (
-    <Layout>
-      <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
+    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
         <div className="mb-8">
           <div className="inline-flex items-center gap-2 rounded-md border border-border bg-base-surface px-3 py-1.5">
             <Repeat className="h-3.5 w-3.5 text-accent-purple" />
@@ -139,7 +137,6 @@ export function SensitivityConverterPage() {
           </p>
         </div>
       </div>
-    </Layout>
   );
 }
 

@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Calculator } from 'lucide-react';
-import { Layout } from '@/components/layout/Layout';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 
@@ -14,8 +13,7 @@ export function EdpiCalculatorPage() {
   const edpi = valid ? dpiNum * sensNum : null;
 
   return (
-    <Layout>
-      <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 sm:py-14">
+    <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6 sm:py-14">
         <div className="mb-8">
           <div className="inline-flex items-center gap-2 rounded-md border border-border bg-base-surface px-3 py-1.5">
             <Calculator className="h-3.5 w-3.5 text-accent-purple" />
@@ -77,7 +75,6 @@ export function EdpiCalculatorPage() {
           <RangeCard label="High" range="800+" note="Fast flicks, less arm movement" />
         </div>
       </div>
-    </Layout>
   );
 }
 
