@@ -62,19 +62,21 @@ export function Navbar() {
               {user ? 'Account' : 'Sign In'}
             </span>
           </Link>
-          <Link
-            to="/settings"
-            className={cn(
-              'inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-150 focus-ring',
-              pathname === '/settings'
-                ? 'text-ink'
-                : 'text-ink-muted hover:text-ink'
-            )}
-            aria-current={pathname === '/settings' ? 'page' : undefined}
-          >
-            <Settings className="h-4 w-4" />
-            <span className="hidden lg:inline">Settings</span>
-          </Link>
+          {user && (
+            <Link
+              to="/settings"
+              className={cn(
+                'inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors duration-150 focus-ring',
+                pathname === '/settings'
+                  ? 'text-ink'
+                  : 'text-ink-muted hover:text-ink'
+              )}
+              aria-current={pathname === '/settings' ? 'page' : undefined}
+            >
+              <Settings className="h-4 w-4" />
+              <span className="hidden lg:inline">Settings</span>
+            </Link>
+          )}
         </div>
       </div>
     </header>
