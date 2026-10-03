@@ -1,6 +1,5 @@
 import { useState, useMemo } from 'react';
 import { Plus, Copy, Check, RotateCcw, AlertCircle } from 'lucide-react';
-import { Layout } from '@/components/layout/Layout';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { GameSelector } from '@/components/sensitivity/GameSelector';
@@ -99,8 +98,7 @@ export function CrosshairGeneratorPage() {
   const availableParams = config.params.filter((p) => p.available);
 
   return (
-    <Layout>
-      <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
+    <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
         <div className="mb-8">
           <div className="inline-flex items-center gap-2 rounded-md border border-border bg-base-surface px-3 py-1.5">
             <Plus className="h-3.5 w-3.5 text-accent-purple" />
@@ -331,7 +329,6 @@ export function CrosshairGeneratorPage() {
           </Card>
         </div>
       </div>
-    </Layout>
   );
 }
 
