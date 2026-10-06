@@ -73,15 +73,16 @@ export function Navbar({ onOpenAuth }: NavbarProps) {
           <Link
             to="/pricing"
             className={cn(
-              'hidden items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all duration-200 focus-ring sm:inline-flex',
+              'premium-nav inline-flex items-center gap-2 rounded-xl border p-2 text-sm font-semibold transition-all duration-200 focus-ring sm:px-3.5 sm:py-2',
               pathname === '/pricing'
-                ? 'border-accent-orange/40 bg-accent-orange/10 text-accent-orange'
-                : 'border-accent-orange/20 bg-accent-orange/5 text-accent-orange hover:border-accent-orange/40 hover:bg-accent-orange/10'
+                ? 'border-amber-300/60 bg-amber-300/15 text-amber-200'
+                : 'border-amber-300/30 bg-amber-300/10 text-amber-200 hover:border-amber-300/60 hover:bg-amber-300/20'
             )}
             aria-current={pathname === '/pricing' ? 'page' : undefined}
+            aria-label="Discover GAMESET Premium"
           >
-            <Crown className="h-4 w-4" />
-            <span>Premium</span>
+            <Crown className="relative h-4 w-4 fill-amber-300/20" strokeWidth={1.8} />
+            <span className="relative hidden sm:inline">Premium</span>
           </Link>
           {user ? (
             <Link

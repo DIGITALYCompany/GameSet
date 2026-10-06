@@ -9,7 +9,7 @@ export function PageBreadcrumbs() {
   const path = normalizePath(pathname);
   const page = getPageMetadata(path);
   const game = GAMES.find((item) => path === `/games/${item.slug}`);
-  if (path === "/" || !page.index) return null;
+  if (path === "/" || path === "/pricing" || !page.index) return null;
   const parent = path.startsWith("/games/")
     ? { path: "/games", label: "Games" }
     : path.startsWith("/tools/")

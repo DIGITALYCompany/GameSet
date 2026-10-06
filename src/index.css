@@ -398,3 +398,9 @@ body::after {
   .next-move-category { font:8px 'JetBrains Mono',monospace; letter-spacing:.14em; color:var(--tool-accent); }
   .next-move-action { color:var(--tool-accent); }
 }
+
+/* Premium navigation: a restrained gold glow and a hover reflection. */
+.premium-nav { position: relative; overflow: hidden; box-shadow: 0 0 20px -8px rgba(252, 211, 77, .35); }
+.premium-nav::before { content: ''; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 25%, rgba(255, 255, 255, .17) 50%, transparent 75%); transform: translateX(-120%); transition: transform .6s ease; }
+.premium-nav:hover::before { transform: translateX(120%); }
+@media (prefers-reduced-motion: reduce) { .premium-nav::before { transition: none; } }
