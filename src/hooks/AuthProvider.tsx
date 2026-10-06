@@ -40,14 +40,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = useCallback(async (email: string, password: string) => {
     if (!isSupabaseConfigured) return { error: 'Account services are not configured yet. You can still use the tools without an account.' };
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message ?? null };
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      return { error: error?.message ?? null };
+    } catch {
+      return { error: 'Unable to reach account services. Check your connection and try again.' };
+    }
   }, []);
 
   const signUp = useCallback(async (email: string, password: string) => {
     if (!isSupabaseConfigured) return { error: 'Account services are not configured yet. You can still use the tools without an account.' };
-    const { error } = await supabase.auth.signUp({ email, password });
-    return { error: error?.message ?? null };
+    try {
+      const { data, error } = await supabase.auth.signUp({ email, password });
+      return { error: error?.message ?? null, confirmationRequired: !error && !data.session };
+    } catch {
+      return { error: 'Unable to reach account services. Check your connection and try again.' };
+    }
   }, []);
 
   const signOut = useCallback(async () => {

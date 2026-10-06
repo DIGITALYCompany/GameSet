@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogIn, UserPlus, AlertCircle } from 'lucide-react';
+import { LogIn, UserPlus, AlertCircle, Mail } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -17,6 +17,7 @@ export function AuthPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [confirmationEmail, setConfirmationEmail] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,11 +26,17 @@ export function AuthPage() {
     setLoading(true);
 
     const fn = mode === 'signin' ? signIn : signUp;
-    const { error: err } = await fn(email.trim(), password);
+    const { error: err, confirmationRequired } = await fn(email.trim(), password);
+    setLoading(false);
 
     if (err) {
       setError(err);
       setLoading(false);
+      return;
+    }
+
+    if (confirmationRequired) {
+      setConfirmationEmail(email.trim());
       return;
     }
 
@@ -53,11 +60,18 @@ export function AuthPage() {
           </p>
         </div>
 
+        {confirmationEmail && (
+          <div role="status" className="mb-5 flex items-start gap-3 rounded-xl border border-accent-green/30 bg-accent-green/10 p-4">
+            <Mail className="mt-0.5 h-5 w-5 shrink-0 text-accent-green" />
+            <div><p className="text-sm font-semibold text-ink">Check your email</p><p className="mt-1 break-words text-sm text-ink-muted">If confirmation is needed for {confirmationEmail}, you will receive a link. Check your inbox and spam folder, then sign in. If you already have an account, sign in instead.</p></div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="flex items-start gap-2 rounded-md border border-red-500/30 bg-red-500/5 p-3">
               <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-400" />
-              <p className="text-sm text-red-400">{error}</p>
+              <p role="alert" className="text-sm text-red-400">{error}</p>
             </div>
           )}
 
@@ -89,7 +103,7 @@ export function AuthPage() {
             variant="primary"
             size="lg"
             fullWidth
-            disabled={loading}
+            disabled={loading || Boolean(confirmationEmail)}
           >
             {mode === 'signin' ? (
               <>
@@ -113,6 +127,7 @@ export function AuthPage() {
               onClick={() => {
                 setMode(mode === 'signin' ? 'signup' : 'signin');
                 setError('');
+                setConfirmationEmail('');
               }}
               className="font-medium text-accent-purple transition-colors hover:text-accent-magenta focus-ring rounded-md"
             >
