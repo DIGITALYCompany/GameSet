@@ -1,3 +1,4 @@
+import { GameIcon } from '@/components/games/GameIcon';
 import { ArrowLeft, ArrowRight, Check, Equal, Maximize2, RotateCcw } from 'lucide-react';
 import { formatSens } from '@/utils/calculations';
 import { cn } from '@/utils/cn';
@@ -113,7 +114,7 @@ export function FloatingResult({ sensitivity, gameName, onClose }: { sensitivity
       <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-green/15">
         <Check className="h-5 w-5 text-accent-green" />
       </span>
-      <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-muted">Your {gameName} sensitivity</p>
+      <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-muted"><GameIcon gameName={gameName} size="sm" className="mr-2" />Your {gameName} sensitivity</p>
       <p className="font-mono text-4xl font-bold tabular-nums text-ink">{formatSens(sensitivity)}</p>
       <p className="text-xs text-ink-dim">Full results and saving are in the main window.</p>
       <button

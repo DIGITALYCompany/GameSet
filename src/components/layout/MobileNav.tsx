@@ -1,10 +1,9 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Bookmark, Gamepad2, Wrench, User } from 'lucide-react';
+import { Gamepad2, Wrench, User } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/utils/cn';
 
 const LINK_ITEMS = [
-  { label: 'My setup', to: '/setup', icon: Bookmark },
   { label: 'Games', to: '/games', icon: Gamepad2 },
   { label: 'Tools', to: '/tools', icon: Wrench },
 ];

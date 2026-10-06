@@ -1,3 +1,4 @@
+import { GameIcon } from '@/components/games/GameIcon';
 import { useState } from 'react';
 import { Save, RotateCcw, Copy, Check, Home } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -53,11 +54,11 @@ export function ResultView({
   };
 
   return (
-    <div className="relative isolate flex min-h-screen flex-col bg-base-bg">
+    <div className="tool-tone-sensitivity sensitivity-session relative isolate flex min-h-screen flex-col bg-base-bg">
       <SiteGrid />
       {/* Header */}
       <div className="border-b border-border nav-blur px-4 py-4 sm:px-6">
-        <div className="mx-auto flex max-w-3xl items-center justify-between">
+        <div className="mx-auto flex max-w-6xl items-center justify-between">
           <Logo size="sm" />
           <Link
             to="/"
@@ -70,10 +71,10 @@ export function ResultView({
       </div>
 
       <div className="flex flex-1 items-center justify-center px-4 py-10 sm:px-6">
-        <div className="mx-auto w-full max-w-2xl animate-slide-up">
+        <div className="mx-auto w-full max-w-3xl rounded-2xl border border-white/10 bg-base-surface/80 p-5 sm:p-8 animate-slide-up">
           {/* Result */}
           <div className="text-center">
-            <p className="font-display text-sm font-semibold uppercase tracking-[0.2em] text-ink-muted">
+            <p className="tool-eyebrow justify-center">
               Your GAMESET Sensitivity
             </p>
             <p className="mt-5 font-mono text-6xl font-bold text-gradient sm:text-8xl animate-pop">
@@ -92,7 +93,7 @@ export function ResultView({
             <StatTile label="DPI" value={String(dpi)} />
             <StatTile label="eDPI" value={String(round(edpi, 0))} />
             <StatTile label="cm / 360°" value={String(round(cm360, 1))} />
-            <StatTile label="Game" value={gameName} />
+            <StatTile label="Game" value={<span className="inline-flex items-center gap-2"><GameIcon gameName={gameName} size="xs" />{gameName}</span>} />
             <StatTile label="Rounds" value={String(rounds)} />
             <StatTile
               label="Adjustment"
@@ -138,7 +139,7 @@ export function ResultView({
   );
 }
 
-function StatTile({ label, value }: { label: string; value: string }) {
+function StatTile({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="rounded-xl border border-border bg-base-surface p-4 shadow-card transition-all duration-300 hover:border-white/10 hover:bg-base-surface-2">
       <p className="text-xs font-medium uppercase tracking-wider text-ink-dim">

@@ -1,13 +1,21 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Trash2, Eye, X, History as HistoryIcon, Crosshair, ArrowLeft } from 'lucide-react';
-import { Layout } from '@/components/layout/Layout';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { getTests, deleteTest, clearTests } from '@/lib/storage';
-import { formatDate, formatDateTime } from '@/utils/helpers';
-import { round } from '@/utils/calculations';
-import type { SensitivityResult } from '@/types';
+import { GameIcon } from "@/components/games/GameIcon";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import {
+  Trash2,
+  Eye,
+  X,
+  History as HistoryIcon,
+  Crosshair,
+  ArrowLeft,
+} from "lucide-react";
+import { Layout } from "@/components/layout/Layout";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { getTests, deleteTest, clearTests } from "@/lib/storage";
+import { formatDate, formatDateTime } from "@/utils/helpers";
+import { round } from "@/utils/calculations";
+import type { SensitivityResult } from "@/types";
 
 export function HistoryPage() {
   const [tests, setTests] = useState<SensitivityResult[]>(() => getTests());
@@ -82,9 +90,7 @@ export function HistoryPage() {
                 className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-accent-purple/15 to-accent-magenta/10 transition-transform group-hover:scale-110">
-                    <Crosshair className="h-5 w-5 text-accent-purple" />
-                  </div>
+                  <GameIcon gameId={test.gameId} gameName={test.gameName} />
                   <div className="min-w-0">
                     <p className="font-display text-base font-semibold text-ink">
                       {test.gameName}
@@ -96,9 +102,15 @@ export function HistoryPage() {
                 </div>
 
                 <div className="grid grid-cols-3 gap-4 sm:flex sm:items-center sm:gap-6">
-                  <Stat label="Sens" value={round(test.sensitivity, 2).toString()} />
+                  <Stat
+                    label="Sens"
+                    value={round(test.sensitivity, 2).toString()}
+                  />
                   <Stat label="eDPI" value={round(test.edpi, 0).toString()} />
-                  <Stat label="cm/360" value={round(test.cm360, 1).toString()} />
+                  <Stat
+                    label="cm/360"
+                    value={round(test.cm360, 1).toString()}
+                  />
                 </div>
 
                 <div className="flex items-center gap-2 sm:shrink-0">
@@ -208,9 +220,7 @@ function DetailModal({
             label="Starting Sens"
             value={round(result.initialSensitivity, 3).toString()}
           />
-          {result.fov && (
-            <DetailRow label="FOV" value={`${result.fov}°`} />
-          )}
+          {result.fov && <DetailRow label="FOV" value={`${result.fov}°`} />}
         </div>
       </Card>
     </div>

@@ -1,9 +1,10 @@
-﻿import { Link } from "react-router-dom";
+import { GameIcon } from "@/components/games/GameIcon";
+import { Link } from "react-router-dom";
 import { ArrowRight, Crosshair, ShieldCheck, Zap } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { LandingSections } from "@/components/landing/LandingSections";
 import { AimLabPreview } from "@/components/landing/AimLabPreview";
-import { QuickAccess } from '@/components/landing/QuickAccess';
+import { QuickAccess } from "@/components/landing/QuickAccess";
 import { getAvailableTools } from "@/data/tools";
 import { GAMES } from "@/data/games";
 
@@ -84,8 +85,9 @@ export function LandingPage() {
               <Link
                 key={game.id}
                 to={`/games/${game.slug}`}
-                className="rounded font-display text-xs font-semibold uppercase tracking-wider text-ink-muted transition-colors hover:text-ink focus-ring"
+                className="inline-flex items-center gap-2 rounded font-display text-xs font-semibold uppercase tracking-wider text-ink-muted transition-colors hover:text-ink focus-ring"
               >
+                <GameIcon gameId={game.id} size="xs" />
                 {game.id === "cod"
                   ? "WARZONE"
                   : game.id === "r6"

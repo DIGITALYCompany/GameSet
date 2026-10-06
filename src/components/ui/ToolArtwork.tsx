@@ -1,6 +1,5 @@
 ﻿export function ToolArtwork({ id }: { id: string }) {
   const sensitivity = [
-    "sensitivity-finder",
     "sensitivity-converter",
     "edpi-calculator",
     "cm360-calculator",

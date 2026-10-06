@@ -80,7 +80,7 @@ export function PlayerInput({
             eDPI
           </p>
           <p className="mt-1 font-mono text-xl font-bold text-ink">
-            {edpi !== null ? round(edpi, 1) : '—'}
+            {edpi !== null ? round(edpi, 1) : 'N/A'}
           </p>
         </div>
         <div>
@@ -88,7 +88,7 @@ export function PlayerInput({
             cm / 360°
           </p>
           <p className="mt-1 font-mono text-xl font-bold text-ink">
-            {cm360 !== null ? `${round(cm360, 1)}` : '—'}
+            {cm360 !== null ? `${round(cm360, 1)}` : 'N/A'}
           </p>
         </div>
       </div>

@@ -39,11 +39,11 @@ export function ComparisonView({
   const { selection, select: handleSelect } = useComparisonChoice(round, onChoose, onExit, detached ? null : window);
 
   return (
-    <div className="relative isolate flex min-h-screen flex-col bg-base-bg">
+    <div className="tool-tone-sensitivity sensitivity-session relative isolate flex min-h-screen flex-col bg-base-bg">
       <SiteGrid />
       {/* Header */}
       <div className="border-b border-border nav-blur px-4 py-4 sm:px-6">
-        <div className="mx-auto flex max-w-3xl items-center justify-between">
+        <div className="mx-auto flex max-w-6xl items-center justify-between">
           <Logo size="sm" />
           <div className="flex items-center gap-2">
             {canDetach && !detached && (
@@ -127,7 +127,7 @@ export function ComparisonView({
             <span className={cn('font-mono font-semibold', gapPercent < 4 ? 'text-accent-orange' : 'text-ink-muted')}>
               {gapPercent.toFixed(1)}%
             </span>
-            {gapPercent < 4 && ' · very fine difference — "Felt the same" is a valid answer'}
+            {gapPercent < 4 && ' · very fine difference. "Felt the same" is a valid answer'}
           </p>
           <div className="grid grid-cols-2 gap-4 sm:gap-6">
             <ComparisonCard
@@ -180,7 +180,7 @@ export function ComparisonView({
             className={cn('mt-3', selection === 'same' && 'text-accent-purple')}
           >
             <Equal className="h-4 w-4" />
-            Felt the same — finish here
+            Felt the same: finish here
           </Button>
 
           <p className="mt-5 text-center text-xs text-ink-dim">
@@ -218,7 +218,7 @@ function ComparisonCard({
       aria-label={`${label} sensitivity: ${formatSens(value)}`}
       aria-pressed={selected}
       className={cn(
-        'flex flex-col items-center justify-center rounded-xl border p-6 transition-all duration-200 focus-ring sm:p-10',
+        'flex flex-col items-center justify-center rounded-2xl border p-6 transition-all duration-200 focus-ring sm:p-10',
         'min-h-[200px] sm:min-h-[240px]',
         selected
           ? 'border-accent-purple bg-accent-purple/8 scale-[1.03] shadow-glow'
@@ -227,7 +227,7 @@ function ComparisonCard({
             : 'border-border bg-base-surface shadow-card hover:border-white/12 hover:bg-base-surface-2 hover:-translate-y-[3px] hover:shadow-card-hover'
       )}
     >
-      <span className="font-display text-xs font-bold uppercase tracking-[0.2em] text-ink-muted sm:text-sm">
+      <span className="font-mono text-xs font-medium uppercase tracking-[0.2em] text-ink-muted sm:text-sm">
         {label}
       </span>
       <span

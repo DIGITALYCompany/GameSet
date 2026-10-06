@@ -1,3 +1,4 @@
+import { GameIcon } from '@/components/games/GameIcon';
 import { GAMES } from '@/data/games';
 import type { GameConfig } from '@/types';
 import { cn } from '@/utils/cn';
@@ -5,21 +6,6 @@ import { cn } from '@/utils/cn';
 interface GameSelectorProps {
   selectedId: string | null;
   onSelect: (game: GameConfig) => void;
-}
-
-/** Compact game initials badge — avoids needing image assets. */
-function GameBadge({ name }: { name: string }) {
-  const initials = name
-    .split(/[\s/]+/)
-    .map((w) => w[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
-  return (
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-base-surface-3 font-display text-sm font-bold text-ink-muted">
-      {initials}
-    </div>
-  );
 }
 
 export function GameSelector({ selectedId, onSelect }: GameSelectorProps) {
@@ -40,7 +26,7 @@ export function GameSelector({ selectedId, onSelect }: GameSelectorProps) {
                 : 'border-border bg-base-surface hover:border-white/15 hover:bg-base-surface-2'
             )}
           >
-            <GameBadge name={game.name} />
+            <GameIcon gameId={game.id} />
             <div className="min-w-0">
               <p
                 className={cn(

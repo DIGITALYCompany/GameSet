@@ -40,7 +40,7 @@ export function saveTest(result: SensitivityResult): void {
   try {
     localStorage.setItem(KEYS.tests, JSON.stringify(tests));
   } catch {
-    // Storage full or unavailable — fail silently
+    // Storage full or unavailable: fail silently
   }
 }
 

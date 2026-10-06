@@ -1,3 +1,4 @@
+import { GameIcon } from '@/components/games/GameIcon';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { GAMES } from '@/data/games';
@@ -46,7 +47,7 @@ export function CrosshairExportPanel({
     <div className="border-gradient overflow-hidden rounded-2xl bg-base-surface shadow-card">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
         <div>
-          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-dim">Export to {gameName}</p>
+          <p className="font-mono text-[11px] uppercase tracking-[0.18em] text-ink-dim"><GameIcon gameName={gameName} size="xs" className="mr-2" />Export to {gameName}</p>
           <h3 className="mt-1 font-display text-lg font-semibold text-ink">
             {active.kind === 'manual' ? 'Copy the menu values' : 'Paste it straight into the game'}
           </h3>

@@ -108,7 +108,7 @@ function manualExport(title: string, menuPath: string, rows: (s: CrosshairShape)
     id: 'manual',
     label: 'Menu values',
     kind: 'manual',
-    generate: (s) => [`${title} — ${menuPath}`, '', ...rows(s)].join('\n'),
+    generate: (s) => [`${title}: ${menuPath}`, '', ...rows(s)].join('\n'),
     steps: [`Open ${menuPath}.`, 'Set each value exactly as listed.', 'Save your settings.'],
   };
 }

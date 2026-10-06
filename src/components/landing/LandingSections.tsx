@@ -1,4 +1,6 @@
-﻿import { Link } from "react-router-dom";
+import { GAME_ASSETS } from '@/data/gameAssets';
+import { GameIcon } from "@/components/games/GameIcon";
+import { Link } from "react-router-dom";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -94,23 +96,11 @@ export function LandingSections() {
               className="arena-game group focus-ring"
               style={{ "--game-color": game.color } as React.CSSProperties}
             >
-              <div className="arena-game-art" aria-hidden="true">
+              <div className="game-card-cover relative isolate overflow-hidden" aria-hidden="true">
+                <img src={GAME_ASSETS[game.id].artwork} alt="" loading="lazy" className="game-card-image absolute inset-0 z-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                <div className="game-card-shade pointer-events-none absolute -inset-px z-10" />
                 <span className="arena-game-number">0{i + 1}</span>
-                <span className="arena-game-glyph">
-                  {game.id === "cs2"
-                    ? "CS"
-                    : game.id === "valorant"
-                      ? "V"
-                      : game.id === "r6"
-                        ? "R6"
-                        : game.id === "cod"
-                          ? "WZ"
-                          : game.name
-                              .split(/[\s/]+/)
-                              .map((w) => w[0])
-                              .slice(0, 2)
-                              .join("")}
-                </span>
+                <GameIcon gameId={game.id} className="absolute left-4 top-9 z-20" />
                 <Crosshair className="arena-game-crosshair" />
               </div>
               <div className="relative px-4 pb-4">
@@ -159,7 +149,7 @@ export function LandingSections() {
           <div className="flex items-center gap-3">
             <Sparkles className="h-4 w-4 text-accent-purple-light" />
             <p className="text-xs text-ink-muted">
-              Want to go further?{" "}
+              Want to go further to {" "}
               <span className="text-ink">Pro & Elite are coming soon.</span>
             </p>
           </div>

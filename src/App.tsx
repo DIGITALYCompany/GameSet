@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/hooks/AuthProvider';
 import { WorkspaceProvider } from '@/hooks/WorkspaceProvider';
 import { Layout } from '@/components/layout/Layout';
+import { PageSeo } from '@/components/layout/PageSeo';
 const EdpiCalculatorPage = lazy(() => import('@/pages/tools/EdpiCalculatorPage').then((module) => ({ default: module.EdpiCalculatorPage })));
 const Cm360CalculatorPage = lazy(() => import('@/pages/tools/Cm360CalculatorPage').then((module) => ({ default: module.Cm360CalculatorPage })));
 const SettingsPage = lazy(() => import('@/pages/SettingsPage').then((module) => ({ default: module.SettingsPage })));
@@ -30,6 +31,7 @@ export default function App() {
     <AuthProvider>
       <WorkspaceProvider>
       <BrowserRouter>
+        <PageSeo />
         <Suspense fallback={<div role="status" className="flex min-h-screen items-center justify-center bg-base-bg text-ink-muted">Loading GameSet...</div>}>
         <Routes>
           <Route path="/" element={<LandingPage />} />

@@ -1,0 +1,65 @@
+[
+  {
+    "game": "thefinals",
+    "publisher": "THE FINALS",
+    "icon": "https://shared.akamai.steamstatic.com/community_assets/images/apps/2073850/9532db560dca3b4982f4af3f5981b6b2ce2a6909.jpg",
+    "art": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2073850/61f55ef49a74c76bf9fda9ec35bc3101eeee2b3e/header.jpg",
+    "metadata": "https://api.steamcmd.net/v1/info/2073850",
+    "highResolutionIcon": "https://commons.wikimedia.org/wiki/File:The_Finals_logo_stacked.svg"
+  },
+  {
+    "game": "cs2",
+    "publisher": "Counter-Strike 2",
+    "icon": "https://shared.akamai.steamstatic.com/community_assets/images/apps/730/8dbc71957312bbd3baea65848b545be9eae2a355.jpg",
+    "art": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/730/162664aa5da85f418105350c5d67ca565f6c3713/header.jpg",
+    "metadata": "https://api.steamcmd.net/v1/info/730",
+    "highResolutionIcon": "https://cdn.jsdelivr.net/npm/simple-icons@13/icons/counterstrike.svg"
+  },
+  {
+    "game": "apex",
+    "publisher": "Apex Legends",
+    "icon": "https://shared.akamai.steamstatic.com/community_assets/images/apps/1172470/8986dd626da56db5f3fe09bc1b8871739de8b00d.jpg",
+    "art": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1172470/6cf04767652d703b6050da84b82cfb1194258d7d/header.jpg",
+    "metadata": "https://api.steamcmd.net/v1/info/1172470",
+    "highResolutionIcon": "https://commons.wikimedia.org/wiki/File:Apex_Legends_logo.svg"
+  },
+  {
+    "game": "overwatch2",
+    "publisher": "Overwatch®",
+    "icon": "https://shared.akamai.steamstatic.com/community_assets/images/apps/2357570/da42bd294c941d5947b1bc2c2b2efa1313d36a91.jpg",
+    "art": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2357570/26446ff05a359d4942e277f82fd347e89b275be3/header.jpg",
+    "metadata": "https://api.steamcmd.net/v1/info/2357570",
+    "highResolutionIcon": "https://commons.wikimedia.org/wiki/File:Overwatch_circle_logo.svg"
+  },
+  {
+    "game": "r6",
+    "publisher": "Tom Clancy's Rainbow Six Siege",
+    "icon": "https://shared.akamai.steamstatic.com/community_assets/images/apps/359550/624745d333ac54aedb1ee911013e2edb7722550e.jpg",
+    "art": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/359550/cd31c5a197317624687ad580af592e6404d13581/header.jpg",
+    "metadata": "https://api.steamcmd.net/v1/info/359550",
+    "highResolutionIcon": "https://cc0.cn/logo/svg-r-it07tcqzhicm.html"
+  },
+  {
+    "game": "cod",
+    "publisher": "Call of Duty®",
+    "icon": "https://shared.akamai.steamstatic.com/community_assets/images/apps/1938090/8eaf32220060344996cbf11f697a4f4be943e5f3.jpg",
+    "art": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1938090/23af6cf41e2d09620caa07700a4cb3288dbcbaa8/header.jpg",
+    "metadata": "https://api.steamcmd.net/v1/info/1938090",
+    "highResolutionIcon": "https://shared.akamai.steamstatic.com/community_assets/images/apps/1938090/62d857e14896e4f7010ebedc8842b1e48898a18c.ico"
+  },
+  {
+    "game": "valorant",
+    "icon": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/news/cbf4460132cdfeb2a97fad5f9dd25ba0bc058f76-128x128.png?accountingTag=VAL",
+    "art": "https://cmsassets.rgpub.io/sanity/images/dsfx7636/news_live/1d1a219a5cb25d15b6e9fe2d4a4d2b83d41f0a8f-1920x1080.jpg?accountingTag=VAL&w=720&h=405&fit=crop",
+    "source": "https://playvalorant.com/en-us/",
+    "highResolutionIcon": "https://cdn.jsdelivr.net/npm/simple-icons@13/icons/valorant.svg"
+  },
+  {
+    "game": "fortnite",
+    "icon": "https://upload.wikimedia.org/wikipedia/commons/0/0e/FortniteLogo.svg?utm_source=commons.wikimedia.org&utm_campaign=index&utm_content=original",
+    "iconSource": "https://commons.wikimedia.org/wiki/File:FortniteLogo.svg",
+    "art": "https://cdn-live.prm.ol.epicgames.com/prod/c9d5be52e48745d9b71b43693015543b.jpeg?width=720&height=405&aspect=fill",
+    "artSource": "https://fortnite-api.com/v2/news/br",
+    "highResolutionIcon": "https://commons.wikimedia.org/wiki/File:Fortnite_F_lettermark_logo.png"
+  }
+]

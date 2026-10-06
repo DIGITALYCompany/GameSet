@@ -1,18 +1,21 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Repeat, ArrowRight } from 'lucide-react';
-import { Layout } from '@/components/layout/Layout';
-import { Card } from '@/components/ui/Card';
-import { Input } from '@/components/ui/Input';
-import { GAMES } from '@/data/games';
-import { calcCm360, round } from '@/utils/calculations';
-import type { GameConfig } from '@/types';
+import { ToolWorkspace } from "@/components/ui/ToolWorkspace";
+import { GameIcon } from "@/components/games/GameIcon";
+import { useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
+import { Layout } from "@/components/layout/Layout";
+import { Card } from "@/components/ui/Card";
+import { Input } from "@/components/ui/Input";
+import { GAMES } from "@/data/games";
+import { calcCm360, round } from "@/utils/calculations";
+import type { GameConfig } from "@/types";
 
 export function SensitivityConverterPage() {
-  const [sourceGame, setSourceGame] = useState<GameConfig>(GAMES[0]);
-  const [targetGame, setTargetGame] = useState<GameConfig>(GAMES[1]);
-  const [dpi, setDpi] = useState('800');
-  const [sensitivity, setSensitivity] = useState(String(GAMES[0].defaultSens));
+  const [searchParams] = useSearchParams();
+  const [sourceGame, setSourceGame] = useState<GameConfig>(() => GAMES.find(item => item.id === searchParams.get('game')) || GAMES[0]);
+  const [targetGame, setTargetGame] = useState<GameConfig>(() => GAMES.find(item => item.id !== sourceGame.id)!);
+  const [dpi, setDpi] = useState("800");
+  const [sensitivity, setSensitivity] = useState(String(sourceGame.defaultSens));
 
   const dpiNum = parseFloat(dpi);
   const sensNum = parseFloat(sensitivity);
@@ -32,26 +35,14 @@ export function SensitivityConverterPage() {
   const swap = () => {
     setSourceGame(targetGame);
     setTargetGame(sourceGame);
-    setSensitivity(targetSens !== null ? round(targetSens, 4).toString() : sensitivity);
+    setSensitivity(
+      targetSens !== null ? round(targetSens, 4).toString() : sensitivity,
+    );
   };
 
   return (
     <Layout>
-      <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
-        <div className="mb-8">
-          <div className="inline-flex items-center gap-2 rounded-lg border border-border bg-base-surface px-3 py-1.5">
-            <Repeat className="h-3.5 w-3.5 text-accent-purple" />
-            <span className="text-xs font-medium text-ink-muted">Sensitivity Converter</span>
-          </div>
-          <h1 className="mt-4 font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-            Sensitivity Converter
-          </h1>
-          <p className="mt-2 text-base text-ink-muted">
-            Convert your sensitivity from one game to another by matching your
-            cm/360. This ensures your aim feels the same across games.
-          </p>
-        </div>
-
+      <ToolWorkspace toolId="sensitivity-converter">
         {/* Source and target game selectors */}
         <div className="grid items-start gap-4 lg:grid-cols-[1fr_auto_1fr]">
           <Card>
@@ -110,13 +101,15 @@ export function SensitivityConverterPage() {
               <div className="rounded-lg border border-border bg-base-surface-2 p-3">
                 <p className="text-xs font-medium text-ink-dim">DPI (same)</p>
                 <p className="mt-1 font-mono text-lg font-bold text-ink">
-                  {valid ? dpiNum : '—'}
+                  {valid ? dpiNum : "N/A"}
                 </p>
               </div>
               <div className="rounded-lg border border-accent-purple/40 bg-accent-purple/5 p-3">
-                <p className="text-xs font-medium text-accent-purple">Converted Sensitivity</p>
+                <p className="text-xs font-medium text-accent-purple">
+                  Converted Sensitivity
+                </p>
                 <p className="mt-1 font-mono text-lg font-bold text-ink">
-                  {targetSens !== null ? round(targetSens, 4) : '—'}
+                  {targetSens !== null ? round(targetSens, 4) : "N/A"}
                 </p>
               </div>
             </div>
@@ -124,11 +117,29 @@ export function SensitivityConverterPage() {
         </div>
 
         {/* Result summary */}
-        {targetSens !== null && Number.isFinite(targetSens) && <Link to={`/setup?${new URLSearchParams({ game: targetGame.id, dpi: String(dpiNum), sensitivity: String(targetSens) }).toString()}`} className="arena-secondary mt-6 focus-ring">Use converted sensitivity in my setup</Link>}
+        {targetSens !== null && Number.isFinite(targetSens) && (
+          <Link
+            to={`/setup?${new URLSearchParams({ game: targetGame.id, dpi: String(dpiNum), sensitivity: String(targetSens) }).toString()}`}
+            className="arena-secondary mt-6 focus-ring"
+          >
+            Use converted sensitivity in my setup
+          </Link>
+        )}
         <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <StatCard label="Source cm/360" value={cm360 !== null ? `${round(cm360, 1)} cm` : '—'} />
-          <StatCard label="Target cm/360" value={cm360 !== null ? `${round(cm360, 1)} cm` : '—'} />
-          <StatCard label="Target eDPI" value={targetEdpi !== null ? round(targetEdpi, 0).toString() : '—'} />
+          <StatCard
+            label="Source cm/360"
+            value={cm360 !== null ? `${round(cm360, 1)} cm` : "N/A"}
+          />
+          <StatCard
+            label="Target cm/360"
+            value={cm360 !== null ? `${round(cm360, 1)} cm` : "N/A"}
+          />
+          <StatCard
+            label="Target eDPI"
+            value={
+              targetEdpi !== null ? round(targetEdpi, 0).toString() : "N/A"
+            }
+          />
         </div>
 
         <div className="mt-6 rounded-xl border border-border bg-base-surface-2 p-4 shadow-card">
@@ -136,11 +147,11 @@ export function SensitivityConverterPage() {
             <span className="font-semibold text-ink">How it works:</span> Your
             cm/360 (centimeters per full turn) stays constant when converting.
             The converter calculates your cm/360 from the source game, then
-            solves for the sensitivity in the target game that produces the
-            same cm/360 at the same DPI.
+            solves for the sensitivity in the target game that produces the same
+            cm/360 at the same DPI.
           </p>
         </div>
-      </div>
+      </ToolWorkspace>
     </Layout>
   );
 }
@@ -156,13 +167,18 @@ function GameDropdown({
 }) {
   return (
     <div className="relative">
+      <GameIcon
+        gameId={selected.id}
+        size="sm"
+        className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2"
+      />
       <select
         value={selected.id}
         onChange={(e) => {
           const game = games.find((g) => g.id === e.target.value);
           if (game) onSelect(game);
         }}
-        className="w-full appearance-none rounded-lg border border-border bg-base-surface-2 px-4 py-2.5 text-sm font-medium text-ink transition-colors focus:border-accent-purple focus:outline-none focus:ring-1 focus:ring-accent-purple"
+        className="w-full appearance-none rounded-lg border border-border bg-base-surface-2 pl-12 pr-4 py-2.5 text-sm font-medium text-ink transition-colors focus:border-accent-purple focus:outline-none focus:ring-1 focus:ring-accent-purple"
         aria-label="Select game"
       >
         {games.map((g) => (

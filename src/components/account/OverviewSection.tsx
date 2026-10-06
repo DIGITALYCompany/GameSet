@@ -82,8 +82,8 @@ export function OverviewSection({ tests, aimScores, followedCount, onOpenHistory
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatTile label="Sens tests" value={String(tests.length)} />
           <StatTile label="Aim sessions" value={String(aimScores.length)} />
-          <StatTile label="Avg accuracy" value={avgAccuracy !== null ? `${avgAccuracy}%` : '—'} />
-          <StatTile label="Best score" value={best !== null ? String(best) : '—'} hint={`${followedCount} games followed`} />
+          <StatTile label="Avg accuracy" value={avgAccuracy !== null ? `${avgAccuracy}%` : 'N/A'} />
+          <StatTile label="Best score" value={best !== null ? String(best) : 'N/A'} hint={`${followedCount} games followed`} />
         </div>
       </section>
 

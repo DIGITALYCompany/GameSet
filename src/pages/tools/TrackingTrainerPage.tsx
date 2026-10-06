@@ -1,25 +1,32 @@
-import { useState, useRef, useEffect } from 'react';
-import { Radar, RotateCcw, ArrowLeft, Trophy, Zap, Cloud } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import { Layout } from '@/components/layout/Layout';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/lib/supabase';
-import { SessionControls, PausedOverlay } from '@/components/ui/SessionControls';
-import { useSessionShortcuts } from '@/hooks/useSessionShortcuts';
-import { cn } from '@/utils/cn';
+import { ToolWorkspace } from "@/components/ui/ToolWorkspace";
+import { useState, useRef, useEffect } from "react";
+import { Radar, RotateCcw, ArrowLeft, Trophy, Zap, Cloud } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Layout } from "@/components/layout/Layout";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/lib/supabase";
+import {
+  SessionControls,
+  PausedOverlay,
+} from "@/components/ui/SessionControls";
+import { useSessionShortcuts } from "@/hooks/useSessionShortcuts";
+import { cn } from "@/utils/cn";
 
-type GameState = 'idle' | 'playing' | 'paused' | 'finished';
-type Difficulty = 'easy' | 'medium' | 'hard';
+type GameState = "idle" | "playing" | "paused" | "finished";
+type Difficulty = "easy" | "medium" | "hard";
 
 const GAME_DURATION = 30;
-const BEST_KEY = 'tracking-trainer-best';
+const BEST_KEY = "tracking-trainer-best";
 
-const DIFFICULTIES: Record<Difficulty, { label: string; speed: number; radius: number; turnMs: [number, number] }> = {
-  easy: { label: 'Easy', speed: 220, radius: 34, turnMs: [700, 1400] },
-  medium: { label: 'Medium', speed: 360, radius: 28, turnMs: [450, 1000] },
-  hard: { label: 'Hard', speed: 520, radius: 22, turnMs: [250, 700] },
+const DIFFICULTIES: Record<
+  Difficulty,
+  { label: string; speed: number; radius: number; turnMs: [number, number] }
+> = {
+  easy: { label: "Easy", speed: 220, radius: 34, turnMs: [700, 1400] },
+  medium: { label: "Medium", speed: 360, radius: 28, turnMs: [450, 1000] },
+  hard: { label: "Hard", speed: 520, radius: 22, turnMs: [250, 700] },
 };
 
 function randomBetween(min: number, max: number) {
@@ -36,13 +43,19 @@ interface Sim {
 
 export function TrackingTrainerPage() {
   const { user } = useAuth();
-  const [gameState, setGameState] = useState<GameState>('idle');
-  const [difficulty, setDifficulty] = useState<Difficulty>('medium');
+  const [gameState, setGameState] = useState<GameState>("idle");
+  const [difficulty, setDifficulty] = useState<Difficulty>("medium");
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
   const [onTargetPct, setOnTargetPct] = useState(0);
   const [isOnTarget, setIsOnTarget] = useState(false);
-  const [best, setBest] = useState<Record<Difficulty, number>>({ easy: 0, medium: 0, hard: 0 });
-  const [syncState, setSyncState] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle');
+  const [best, setBest] = useState<Record<Difficulty, number>>({
+    easy: 0,
+    medium: 0,
+    hard: 0,
+  });
+  const [syncState, setSyncState] = useState<
+    "idle" | "syncing" | "synced" | "error"
+  >("idle");
 
   const arenaRef = useRef<HTMLDivElement>(null);
   const completedRef = useRef(false);
@@ -60,7 +73,7 @@ export function TrackingTrainerPage() {
   }, []);
 
   useEffect(() => {
-    if (gameState !== 'playing') return;
+    if (gameState !== "playing") return;
     const arena = arenaRef.current;
     const targetEl = targetRef.current;
     if (!arena || !targetEl) return;
@@ -137,7 +150,7 @@ export function TrackingTrainerPage() {
         setTimeLeft(0);
         setOnTargetPct((onMs / elapsedMs) * 100);
         setIsOnTarget(false);
-        setGameState('finished');
+        setGameState("finished");
         return;
       }
       frame = requestAnimationFrame(tick);
@@ -149,7 +162,7 @@ export function TrackingTrainerPage() {
   }, [gameState, difficulty]);
 
   useEffect(() => {
-    if (gameState !== 'finished' || completedRef.current) return;
+    if (gameState !== "finished" || completedRef.current) return;
     completedRef.current = true;
     const pct = Math.round(onTargetPct * 10) / 10;
     setBest((prev) => {
@@ -160,16 +173,16 @@ export function TrackingTrainerPage() {
     });
 
     if (!user) return;
-    setSyncState('syncing');
+    setSyncState("syncing");
     supabase
-      .from('aim_training_scores')
+      .from("aim_training_scores")
       .insert({
-        game_mode: 'tracking',
+        game_mode: "tracking",
         score: Math.round(pct * 10),
         accuracy: pct,
         duration_seconds: GAME_DURATION,
       })
-      .then(({ error }) => setSyncState(error ? 'error' : 'synced'));
+      .then(({ error }) => setSyncState(error ? "error" : "synced"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState]);
 
@@ -178,18 +191,18 @@ export function TrackingTrainerPage() {
     simRef.current = null;
     setTimeLeft(GAME_DURATION);
     setOnTargetPct(0);
-    setSyncState('idle');
-    setGameState('playing');
+    setSyncState("idle");
+    setGameState("playing");
   };
 
   const pauseGame = () => {
-    if (gameState !== 'playing') return;
+    if (gameState !== "playing") return;
     setIsOnTarget(false);
-    setGameState('paused');
+    setGameState("paused");
   };
 
   const resumeGame = () => {
-    if (gameState === 'paused') setGameState('playing');
+    if (gameState === "paused") setGameState("playing");
   };
 
   const resetGame = () => {
@@ -197,12 +210,12 @@ export function TrackingTrainerPage() {
     setTimeLeft(GAME_DURATION);
     setOnTargetPct(0);
     setIsOnTarget(false);
-    setGameState('idle');
+    setGameState("idle");
   };
 
   useSessionShortcuts({
-    running: gameState === 'playing',
-    paused: gameState === 'paused',
+    running: gameState === "playing",
+    paused: gameState === "paused",
     onPause: pauseGame,
     onResume: resumeGame,
     onReset: resetGame,
@@ -215,25 +228,12 @@ export function TrackingTrainerPage() {
 
   const cfg = DIFFICULTIES[difficulty];
   const finalPct = Math.round(onTargetPct * 10) / 10;
-  const isNewBest = gameState === 'finished' && finalPct > 0 && finalPct >= best[difficulty];
+  const isNewBest =
+    gameState === "finished" && finalPct > 0 && finalPct >= best[difficulty];
 
   return (
     <Layout>
-      <div className="mx-auto max-w-4xl px-4 py-12 sm:px-6 sm:py-16">
-        <div className="mb-8">
-          <div className="badge mb-4">
-            <Radar className="h-3.5 w-3.5 text-accent-purple" />
-            <span className="text-ink-muted">Tracking Trainer</span>
-          </div>
-          <h1 className="font-display text-4xl font-bold tracking-tight text-ink sm:text-5xl">
-            Tracking Trainer
-          </h1>
-          <p className="mt-3 max-w-2xl text-lg text-ink-muted">
-            Keep your crosshair on a target that strafes and changes direction
-            without warning. Your score is the share of time you stayed on it.
-          </p>
-        </div>
-
+      <ToolWorkspace toolId="tracking-trainer" status={gameState}>
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="inline-flex rounded-xl border border-border bg-base-surface p-1 shadow-card">
             {(Object.keys(DIFFICULTIES) as Difficulty[]).map((d) => (
@@ -241,13 +241,13 @@ export function TrackingTrainerPage() {
                 key={d}
                 type="button"
                 onClick={() => setDifficulty(d)}
-                disabled={gameState === 'playing' || gameState === 'paused'}
+                disabled={gameState === "playing" || gameState === "paused"}
                 aria-pressed={difficulty === d}
                 className={cn(
-                  'rounded-lg px-4 py-1.5 text-sm font-semibold transition-all duration-200 focus-ring disabled:cursor-not-allowed',
+                  "rounded-lg px-4 py-1.5 text-sm font-semibold transition-all duration-200 focus-ring disabled:cursor-not-allowed",
                   difficulty === d
-                    ? 'bg-accent-purple/15 text-accent-purple shadow-glow-sm'
-                    : 'text-ink-muted hover:text-ink'
+                    ? "bg-accent-purple/15 text-accent-purple shadow-glow-sm"
+                    : "text-ink-muted hover:text-ink",
                 )}
               >
                 {DIFFICULTIES[d].label}
@@ -255,18 +255,25 @@ export function TrackingTrainerPage() {
             ))}
           </div>
           <div className="flex flex-col gap-3 sm:items-end">
-          {(gameState === 'playing' || gameState === 'paused') && (
-            <SessionControls
-              paused={gameState === 'paused'}
-              onTogglePause={gameState === 'paused' ? resumeGame : pauseGame}
-              onReset={resetGame}
-            />
-          )}
-          <div className="grid grid-cols-3 gap-3 sm:w-[360px]">
-            <StatBox label="Time" value={`${timeLeft.toFixed(1)}s`} />
-            <StatBox label="On target" value={`${onTargetPct.toFixed(1)}%`} accent />
-            <StatBox label="Best" value={best[difficulty] > 0 ? `${best[difficulty]}%` : '—'} />
-          </div>
+            {(gameState === "playing" || gameState === "paused") && (
+              <SessionControls
+                paused={gameState === "paused"}
+                onTogglePause={gameState === "paused" ? resumeGame : pauseGame}
+                onReset={resetGame}
+              />
+            )}
+            <div className="grid grid-cols-3 gap-3 sm:w-[360px]">
+              <StatBox label="Time" value={`${timeLeft.toFixed(1)}s`} />
+              <StatBox
+                label="On target"
+                value={`${onTargetPct.toFixed(1)}%`}
+                accent
+              />
+              <StatBox
+                label="Best"
+                value={best[difficulty] > 0 ? `${best[difficulty]}%` : "N/A"}
+              />
+            </div>
           </div>
         </div>
 
@@ -274,24 +281,22 @@ export function TrackingTrainerPage() {
           <div
             ref={arenaRef}
             onMouseMove={handleMouseMove}
-            onMouseLeave={() => { mouseRef.current = null; }}
-            className={cn(
-              'relative h-[440px] w-full select-none overflow-hidden',
-              gameState === 'playing' ? 'cursor-crosshair' : 'cursor-default'
-            )}
-            style={{
-              background:
-                'radial-gradient(ellipse at center, rgba(142, 59, 255, 0.05), transparent 70%), repeating-conic-gradient(#0F0F18 0% 25%, #0C0C14 0% 50%) 50% / 28px 28px',
+            onMouseLeave={() => {
+              mouseRef.current = null;
             }}
+            className={cn(
+              "training-stage relative h-[440px] w-full select-none overflow-hidden",
+              gameState === "playing" ? "cursor-crosshair" : "cursor-default",
+            )}
           >
-            {(gameState === 'playing' || gameState === 'paused') && (
+            {(gameState === "playing" || gameState === "paused") && (
               <div
                 ref={targetRef}
                 className={cn(
-                  'pointer-events-none absolute left-0 top-0 rounded-full border-2 transition-[background-color,box-shadow,border-color] duration-100',
+                  "pointer-events-none absolute left-0 top-0 rounded-full border-2 transition-[background-color,box-shadow,border-color] duration-100",
                   isOnTarget
-                    ? 'border-accent-green bg-accent-green/30 shadow-[0_0_30px_rgba(34,197,94,0.45)]'
-                    : 'border-accent-purple bg-accent-purple/20'
+                    ? "border-accent-green bg-accent-green/30 shadow-[0_0_30px_rgba(34,197,94,0.45)]"
+                    : "border-accent-purple bg-accent-purple/20",
                 )}
                 style={{ width: cfg.radius * 2, height: cfg.radius * 2 }}
               >
@@ -300,15 +305,19 @@ export function TrackingTrainerPage() {
               </div>
             )}
 
-            {gameState === 'paused' && <PausedOverlay onResume={resumeGame} onReset={resetGame} />}
+            {gameState === "paused" && (
+              <PausedOverlay onResume={resumeGame} onReset={resetGame} />
+            )}
 
-            {gameState === 'idle' && (
+            {gameState === "idle" && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-center">
                 <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-accent-purple/15 to-accent-magenta/10 shadow-glow-sm">
                   <Radar className="h-8 w-8 text-accent-purple" />
                 </div>
                 <div>
-                  <p className="font-display text-lg font-semibold text-ink">Stay on the target</p>
+                  <p className="font-display text-lg font-semibold text-ink">
+                    Stay on the target
+                  </p>
                   <p className="mt-1 text-sm text-ink-muted">
                     {GAME_DURATION} seconds · no clicking, just smooth tracking
                   </p>
@@ -320,27 +329,46 @@ export function TrackingTrainerPage() {
               </div>
             )}
 
-            {gameState === 'finished' && (
+            {gameState === "finished" && (
               <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 text-center animate-fade-in">
                 <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-gradient-to-br from-accent-purple/15 to-accent-magenta/10">
                   <Trophy className="h-8 w-8 text-accent-orange" />
                 </div>
                 <div>
-                  <p className="font-mono text-5xl font-bold text-gradient">{finalPct}%</p>
+                  <p className="font-mono text-5xl font-bold text-gradient">
+                    {finalPct}%
+                  </p>
                   <p className="mt-2 text-sm text-ink-muted">
                     time on target · {cfg.label}
-                    {isNewBest && <span className="font-semibold text-accent-orange"> · New best!</span>}
+                    {isNewBest && (
+                      <span className="font-semibold text-accent-orange">
+                        {" "}
+                        · New best!
+                      </span>
+                    )}
                   </p>
-                  <p className="mt-1 text-xs text-ink-dim">{ratingFor(finalPct)}</p>
-                  {user && syncState !== 'idle' && (
-                    <p className={cn(
-                      'mt-2 flex items-center justify-center gap-1.5 text-xs',
-                      syncState === 'error' ? 'text-accent-red' : 'text-accent-green'
-                    )}>
-                      <Cloud className={cn('h-3 w-3', syncState === 'syncing' && 'animate-pulse')} />
-                      {syncState === 'syncing' && 'Syncing...'}
-                      {syncState === 'synced' && 'Synced to your account'}
-                      {syncState === 'error' && 'Could not sync. Saved on this device only'}
+                  <p className="mt-1 text-xs text-ink-dim">
+                    {ratingFor(finalPct)}
+                  </p>
+                  {user && syncState !== "idle" && (
+                    <p
+                      className={cn(
+                        "mt-2 flex items-center justify-center gap-1.5 text-xs",
+                        syncState === "error"
+                          ? "text-accent-red"
+                          : "text-accent-green",
+                      )}
+                    >
+                      <Cloud
+                        className={cn(
+                          "h-3 w-3",
+                          syncState === "syncing" && "animate-pulse",
+                        )}
+                      />
+                      {syncState === "syncing" && "Syncing..."}
+                      {syncState === "synced" && "Synced to your account"}
+                      {syncState === "error" &&
+                        "Could not sync. Saved on this device only"}
                     </p>
                   )}
                 </div>
@@ -354,9 +382,18 @@ export function TrackingTrainerPage() {
         </Card>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <Tip title="Lead with your arm" text="Large, smooth corrections come from the arm. Use your wrist for micro-adjustments." />
-          <Tip title="Don't chase" text="React to direction changes, don't over-predict them. Overshooting costs more than lag." />
-          <Tip title="Test your sens" text="If you overshoot a lot, your sensitivity may be too high for tracking." />
+          <Tip
+            title="Lead with your arm"
+            text="Large, smooth corrections come from the arm. Use your wrist for micro-adjustments."
+          />
+          <Tip
+            title="Don't chase"
+            text="React to direction changes, don't over-predict them. Overshooting costs more than lag."
+          />
+          <Tip
+            title="Test your sens"
+            text="If you overshoot a lot, your sensitivity may be too high for tracking."
+          />
         </div>
 
         <div className="mt-8">
@@ -368,23 +405,38 @@ export function TrackingTrainerPage() {
             Back to tools
           </Link>
         </div>
-      </div>
+      </ToolWorkspace>
     </Layout>
   );
 }
 
 function ratingFor(pct: number): string {
-  if (pct >= 75) return 'Elite tracking. Pro-level consistency.';
-  if (pct >= 60) return 'Strong. Your tracking holds up in real fights.';
-  if (pct >= 45) return 'Solid. Work on reacting to direction changes.';
-  return 'Keep training. Focus on smooth, steady movement.';
+  if (pct >= 75) return "Elite tracking. Pro-level consistency.";
+  if (pct >= 60) return "Strong. Your tracking holds up in real fights.";
+  if (pct >= 45) return "Solid. Work on reacting to direction changes.";
+  return "Keep training. Focus on smooth, steady movement.";
 }
 
-function StatBox({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function StatBox({
+  label,
+  value,
+  accent,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+}) {
   return (
-    <div className="rounded-xl border border-border bg-base-surface p-3 text-center shadow-card">
-      <p className="text-[11px] font-medium uppercase tracking-wider text-ink-dim">{label}</p>
-      <p className={cn('mt-1 font-mono text-lg font-bold', accent ? 'text-accent-purple' : 'text-ink')}>
+    <div className="tool-metric rounded-xl border border-border bg-base-surface p-3 text-center shadow-card">
+      <p className="text-[11px] font-medium uppercase tracking-wider text-ink-dim">
+        {label}
+      </p>
+      <p
+        className={cn(
+          "mt-1 font-mono text-lg font-bold",
+          accent ? "text-accent-purple" : "text-ink",
+        )}
+      >
         {value}
       </p>
     </div>

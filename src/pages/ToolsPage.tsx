@@ -34,7 +34,6 @@ export function ToolsPage() {
   return (
     <Layout>
       <div className="relative">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(ellipse_at_top,rgba(142,59,255,0.12),transparent_70%)]" />
 
         <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-12 sm:px-6 sm:pt-16">
           <header className="max-w-2xl">

@@ -1,33 +1,37 @@
-import { useEffect, useRef, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { useWorkspace } from '@/hooks/useWorkspace';
-import { createPortal } from 'react-dom';
-import { Crosshair, Settings2, ArrowRight, RotateCcw } from 'lucide-react';
-import { Layout } from '@/components/layout/Layout';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { GameSelector } from '@/components/sensitivity/GameSelector';
-import { PlayerInput } from '@/components/sensitivity/PlayerInput';
-import { ComparisonView } from '@/components/sensitivity/ComparisonView';
-import { FloatingComparison, FloatingResult } from '@/components/sensitivity/FloatingComparison';
-import { useFloatingWindow } from '@/hooks/useFloatingWindow';
-import { ResultView } from '@/components/sensitivity/ResultView';
-import { SensitivityFinderEngine } from '@/lib/sensitivityFinderEngine';
+import { ToolWorkspace } from "@/components/ui/ToolWorkspace";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { createPortal } from "react-dom";
+import { Settings2, ArrowRight, RotateCcw } from "lucide-react";
+import { Layout } from "@/components/layout/Layout";
+import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { GameSelector } from "@/components/sensitivity/GameSelector";
+import { PlayerInput } from "@/components/sensitivity/PlayerInput";
+import { ComparisonView } from "@/components/sensitivity/ComparisonView";
+import {
+  FloatingComparison,
+  FloatingResult,
+} from "@/components/sensitivity/FloatingComparison";
+import { useFloatingWindow } from "@/hooks/useFloatingWindow";
+import { ResultView } from "@/components/sensitivity/ResultView";
+import { SensitivityFinderEngine } from "@/lib/sensitivityFinderEngine";
 import {
   saveTest,
   getSettings,
   saveSelectedGame,
   getSelectedGame,
-} from '@/lib/storage';
-import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/hooks/useAuth';
-import { getGame } from '@/data/games';
-import { calcEdpi, calcCm360 } from '@/utils/calculations';
-import { generateId } from '@/utils/helpers';
-import { cn } from '@/utils/cn';
-import type { GameConfig, GameId, SensitivityResult } from '@/types';
+} from "@/lib/storage";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/hooks/useAuth";
+import { getGame } from "@/data/games";
+import { calcEdpi, calcCm360 } from "@/utils/calculations";
+import { generateId } from "@/utils/helpers";
+import { cn } from "@/utils/cn";
+import type { GameConfig, GameId, SensitivityResult } from "@/types";
 
-type Phase = 'setup' | 'testing' | 'result';
+type Phase = "setup" | "testing" | "result";
 
 export function SensitivityPage() {
   const [searchParams] = useSearchParams();
@@ -36,13 +40,13 @@ export function SensitivityPage() {
   const floating = useFloatingWindow();
 
   // Setup state
-  const [phase, setPhase] = useState<Phase>('setup');
+  const [phase, setPhase] = useState<Phase>("setup");
   const [selectedGame, setSelectedGame] = useState<GameConfig | null>(null);
-  const [dpi, setDpi] = useState('800');
-  const [sensitivity, setSensitivity] = useState('');
-  const [fov, setFov] = useState('');
-  const [dpiError, setDpiError] = useState('');
-  const [sensError, setSensError] = useState('');
+  const [dpi, setDpi] = useState("800");
+  const [sensitivity, setSensitivity] = useState("");
+  const [fov, setFov] = useState("");
+  const [dpiError, setDpiError] = useState("");
+  const [sensError, setSensError] = useState("");
   const [rounds, setRounds] = useState(7);
 
   // Engine state
@@ -70,12 +74,15 @@ export function SensitivityPage() {
     const settings = getSettings();
     setRounds(settings.defaultRounds);
 
-    const savedGameId = searchParams.get('game') || getSelectedGame();
+    const savedGameId = searchParams.get("game") || getSelectedGame();
     if (savedGameId) {
       const game = getGame(savedGameId as GameId);
       if (game) {
         setSelectedGame(game);
-        setSensitivity(String(game.defaultSens));
+        const requestedSens = Number(searchParams.get('sensitivity'));
+        const requestedDpi = Number(searchParams.get('dpi'));
+        setSensitivity(String(Number.isFinite(requestedSens) && requestedSens > 0 && requestedSens >= game.sensScale.min && requestedSens <= game.sensScale.max ? requestedSens : game.defaultSens));
+        if (Number.isInteger(requestedDpi) && requestedDpi > 0 && requestedDpi <= 100000) setDpi(String(requestedDpi));
       }
     }
   }, [searchParams]);
@@ -83,7 +90,7 @@ export function SensitivityPage() {
   const handleGameSelect = (game: GameConfig) => {
     setSelectedGame(game);
     saveSelectedGame(game.id);
-    setSensError('');
+    setSensError("");
     // Pre-fill sensitivity if empty
     if (!sensitivity) {
       setSensitivity(String(game.defaultSens));
@@ -91,17 +98,19 @@ export function SensitivityPage() {
   };
 
   const loadMySetup = () => {
-    const setup = workspace.setups.find(item => item.gameId === selectedGame?.id);
+    const setup = workspace.setups.find(
+      (item) => item.gameId === selectedGame?.id,
+    );
     if (!setup) return;
     setDpi(String(setup.dpi));
     setSensitivity(String(setup.sensitivity));
-    setDpiError('');
-    setSensError('');
+    setDpiError("");
+    setSensError("");
   };
 
   const validateAndStart = () => {
     if (!selectedGame) {
-      setSensError('Select a game to continue');
+      setSensError("Select a game to continue");
       return;
     }
 
@@ -110,22 +119,23 @@ export function SensitivityPage() {
 
     let hasError = false;
     if (isNaN(dpiNum) || dpiNum <= 0) {
-      setDpiError('Enter a valid DPI');
+      setDpiError("Enter a valid DPI");
       hasError = true;
     } else {
-      setDpiError('');
+      setDpiError("");
     }
 
     if (isNaN(sensNum) || sensNum <= 0) {
-      setSensError('Enter a valid sensitivity');
+      setSensError("Enter a valid sensitivity");
       hasError = true;
-    } else if (sensNum < selectedGame.sensScale.min || sensNum > selectedGame.sensScale.max) {
-      setSensError(
-        `Valid range: ${selectedGame.sensDisplay}`
-      );
+    } else if (
+      sensNum < selectedGame.sensScale.min ||
+      sensNum > selectedGame.sensScale.max
+    ) {
+      setSensError(`Valid range: ${selectedGame.sensDisplay}`);
       hasError = true;
     } else {
-      setSensError('');
+      setSensError("");
     }
 
     if (hasError) return;
@@ -134,20 +144,23 @@ export function SensitivityPage() {
     const engine = new SensitivityFinderEngine(sensNum, rounds);
     engineRef.current = engine;
     syncComparison(engine);
-    setPhase('testing');
+    setPhase("testing");
   };
 
   const syncComparison = (engine: SensitivityFinderEngine) => {
-    setComparison({ ...engine.getCurrentComparison(), gapPercent: engine.currentGapPercent });
+    setComparison({
+      ...engine.getCurrentComparison(),
+      gapPercent: engine.currentGapPercent,
+    });
   };
 
-  const handleChoice = (choice: 'lower' | 'higher' | 'same') => {
+  const handleChoice = (choice: "lower" | "higher" | "same") => {
     const engine = engineRef.current;
     if (!engine) return;
-    if (choice === 'lower') engine.selectLower();
-    else if (choice === 'higher') engine.selectHigher();
+    if (choice === "lower") engine.selectLower();
+    else if (choice === "higher") engine.selectHigher();
     else engine.selectSame();
-    if (engine.phase === 'result') {
+    if (engine.phase === "result") {
       finishTest();
     } else {
       syncComparison(engine);
@@ -175,7 +188,7 @@ export function SensitivityPage() {
       initialSensitivity: engine.startingSensitivity,
     });
     setSaved(false);
-    setPhase('result');
+    setPhase("result");
   };
 
   const handleSave = () => {
@@ -200,22 +213,25 @@ export function SensitivityPage() {
 
     // Sync to cloud if signed in
     if (user) {
-      supabase.from('cloud_test_results').insert({
-        game_id: selectedGame.id,
-        game_name: selectedGame.name,
-        dpi: resultData.dpi,
-        sensitivity: resultData.sensitivity,
-        edpi: resultData.edpi,
-        cm360: resultData.cm360,
-        rounds: resultData.rounds,
-        initial_sensitivity: resultData.initialSensitivity,
-        fov: fov ? parseInt(fov, 10) : null,
-      }).then(({ error }) => {
-        if (error) {
-          // Cloud save failed — local save still succeeded
-          // Silently continue; the user's data is safe locally
-        }
-      });
+      supabase
+        .from("cloud_test_results")
+        .insert({
+          game_id: selectedGame.id,
+          game_name: selectedGame.name,
+          dpi: resultData.dpi,
+          sensitivity: resultData.sensitivity,
+          edpi: resultData.edpi,
+          cm360: resultData.cm360,
+          rounds: resultData.rounds,
+          initial_sensitivity: resultData.initialSensitivity,
+          fov: fov ? parseInt(fov, 10) : null,
+        })
+        .then(({ error }) => {
+          if (error) {
+            // Cloud save failed: local save still succeeded
+            // Silently continue; the user's data is safe locally
+          }
+        });
     }
 
     setSaved(true);
@@ -223,14 +239,14 @@ export function SensitivityPage() {
 
   const handleRunAgain = () => {
     floating.close();
-    setPhase('setup');
+    setPhase("setup");
     setResultData(null);
     setSaved(false);
     engineRef.current = null;
   };
 
   const handleExitTest = () => {
-    setPhase('setup');
+    setPhase("setup");
     engineRef.current = null;
     floating.close();
   };
@@ -238,14 +254,17 @@ export function SensitivityPage() {
   const handleRestartTest = () => {
     const current = engineRef.current;
     if (!current) return;
-    const engine = new SensitivityFinderEngine(current.startingSensitivity, rounds);
+    const engine = new SensitivityFinderEngine(
+      current.startingSensitivity,
+      rounds,
+    );
     engineRef.current = engine;
     syncComparison(engine);
   };
 
   const floatingTarget = floating.floatingWindow;
 
-  if (phase === 'testing') {
+  if (phase === "testing") {
     return (
       <>
         <ComparisonView
@@ -275,32 +294,36 @@ export function SensitivityPage() {
               onRestart={handleRestartTest}
               target={floatingTarget}
             />,
-            floatingTarget.document.body
+            floatingTarget.document.body,
           )}
       </>
     );
   }
 
-  if (phase === 'result' && resultData) {
+  if (phase === "result" && resultData) {
     return (
       <>
         {floatingTarget &&
           createPortal(
-            <FloatingResult sensitivity={resultData.sensitivity} gameName={resultData.gameName} onClose={floating.close} />,
-            floatingTarget.document.body
+            <FloatingResult
+              sensitivity={resultData.sensitivity}
+              gameName={resultData.gameName}
+              onClose={floating.close}
+            />,
+            floatingTarget.document.body,
           )}
         <ResultView
-        sensitivity={resultData.sensitivity}
-        dpi={resultData.dpi}
-        edpi={resultData.edpi}
-        cm360={resultData.cm360}
-        gameName={resultData.gameName}
-        rounds={resultData.rounds}
-        initialSensitivity={resultData.initialSensitivity}
-        onSave={handleSave}
-        onRunAgain={handleRunAgain}
-        saved={saved}
-      />
+          sensitivity={resultData.sensitivity}
+          dpi={resultData.dpi}
+          edpi={resultData.edpi}
+          cm360={resultData.cm360}
+          gameName={resultData.gameName}
+          rounds={resultData.rounds}
+          initialSensitivity={resultData.initialSensitivity}
+          onSave={handleSave}
+          onRunAgain={handleRunAgain}
+          saved={saved}
+        />
       </>
     );
   }
@@ -308,21 +331,8 @@ export function SensitivityPage() {
   // Setup view
   return (
     <Layout>
-      <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
+      <ToolWorkspace toolId="sensitivity-finder">
         {/* Header */}
-        <div className="mb-8">
-          <div className="badge">
-            <Crosshair className="h-3.5 w-3.5 text-accent-purple" />
-            <span className="text-ink-muted">Sensitivity Finder</span>
-          </div>
-          <h1 className="mt-4 font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-            Sensitivity Finder
-          </h1>
-          <p className="mt-2 max-w-xl text-base leading-relaxed text-ink-muted">
-            Find a sensitivity that feels natural to you through a progressive
-            comparison process.
-          </p>
-        </div>
 
         {/* Step 1: Game selection */}
         <StepHeader number={1} title="Select your game" />
@@ -338,18 +348,28 @@ export function SensitivityPage() {
         <Card className="mb-6 mt-3">
           {selectedGame ? (
             <>
-            {workspace.setups.some(item => item.gameId === selectedGame.id) && <button type="button" onClick={loadMySetup} className="mb-4 rounded text-xs text-accent-purple-light focus-ring">Use my saved {selectedGame.name} setup</button>}
-            <PlayerInput
-              game={selectedGame}
-              dpi={dpi}
-              sensitivity={sensitivity}
-              fov={fov}
-              dpiError={dpiError}
-              sensError={sensError}
-              onDpiChange={setDpi}
-              onSensitivityChange={setSensitivity}
-              onFovChange={setFov}
-            />
+              {workspace.setups.some(
+                (item) => item.gameId === selectedGame.id,
+              ) && (
+                <button
+                  type="button"
+                  onClick={loadMySetup}
+                  className="mb-4 rounded text-xs text-accent-purple-light focus-ring"
+                >
+                  Use my saved {selectedGame.name} setup
+                </button>
+              )}
+              <PlayerInput
+                game={selectedGame}
+                dpi={dpi}
+                sensitivity={sensitivity}
+                fov={fov}
+                dpiError={dpiError}
+                sensError={sensError}
+                onDpiChange={setDpi}
+                onSensitivityChange={setSensitivity}
+                onFovChange={setFov}
+              />
             </>
           ) : (
             <p className="py-8 text-center text-sm text-ink-dim">
@@ -366,7 +386,8 @@ export function SensitivityPage() {
               <p className="text-sm font-medium text-ink">Test depth</p>
               <p className="mt-1 max-w-xs text-xs leading-relaxed text-ink-muted">
                 Each round narrows the search. Deeper tests pin your sensitivity
-                down more precisely. You can finish early anytime both values feel the same.
+                down more precisely. You can finish early anytime both values
+                feel the same.
               </p>
             </div>
             <div className="grid grid-cols-3 gap-2">
@@ -377,10 +398,10 @@ export function SensitivityPage() {
                   onClick={() => setRounds(preset.rounds)}
                   aria-pressed={rounds === preset.rounds}
                   className={cn(
-                    'flex flex-col items-center rounded-lg border px-4 py-2.5 transition-all duration-200 focus-ring',
+                    "flex flex-col items-center rounded-lg border px-4 py-2.5 transition-all duration-200 focus-ring",
                     rounds === preset.rounds
-                      ? 'border-accent-purple bg-accent-purple/10 text-accent-purple shadow-glow-sm'
-                      : 'border-border bg-base-surface-2 text-ink-muted hover:border-white/15 hover:text-ink hover:bg-base-surface-3'
+                      ? "border-accent-purple bg-accent-purple/10 text-accent-purple shadow-glow-sm"
+                      : "border-border bg-base-surface-2 text-ink-muted hover:border-white/15 hover:text-ink hover:bg-base-surface-3",
                   )}
                 >
                   <span className="text-sm font-semibold">{preset.label}</span>
@@ -388,7 +409,11 @@ export function SensitivityPage() {
                     {preset.rounds} rounds
                   </span>
                   <span className="font-mono text-[11px] opacity-60">
-                    ±{SensitivityFinderEngine.precisionFor(preset.rounds).toFixed(1)}%
+                    ±
+                    {SensitivityFinderEngine.precisionFor(
+                      preset.rounds,
+                    ).toFixed(1)}
+                    %
                   </span>
                 </button>
               ))}
@@ -398,11 +423,7 @@ export function SensitivityPage() {
 
         {/* Start button */}
         <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-          <Button
-            variant="ghost"
-            size="lg"
-            onClick={handleRunAgain}
-          >
+          <Button variant="ghost" size="lg" onClick={handleRunAgain}>
             <RotateCcw className="h-5 w-5" />
             Reset
           </Button>
@@ -423,20 +444,21 @@ export function SensitivityPage() {
           <p className="text-sm leading-relaxed text-ink-muted">
             Each round shows two values. Set each one in your game, do a few
             flicks and tracking, then pick the one that felt better. Your result
-            will land within ±{SensitivityFinderEngine.precisionFor(rounds).toFixed(1)}%
-            of your ideal sensitivity, anywhere from half to one and a half times your
+            will land within ±
+            {SensitivityFinderEngine.precisionFor(rounds).toFixed(1)}% of your
+            ideal sensitivity, anywhere from half to one and a half times your
             current value.
           </p>
         </div>
-      </div>
+      </ToolWorkspace>
     </Layout>
   );
 }
 
 const ROUND_PRESETS = [
-  { rounds: 5, label: 'Quick' },
-  { rounds: 7, label: 'Balanced' },
-  { rounds: 10, label: 'Precise' },
+  { rounds: 5, label: "Quick" },
+  { rounds: 7, label: "Balanced" },
+  { rounds: 10, label: "Precise" },
 ];
 
 function StepHeader({ number, title }: { number: number; title: string }) {

@@ -12,7 +12,7 @@ export function AboutPage() {
       <h2>Our Approach</h2>
       <p>
         We believe gaming tools should be fast, focused, and genuinely useful.
-        GAMESET is not a calculator website — it is the beginning of a
+        GAMESET is not a calculator website. It is the beginning of a
         complete gaming utilities platform. We started with the Sensitivity
         Finder because finding the right sensitivity is one of the most
         impactful things a player can do for their aim.
@@ -20,15 +20,15 @@ export function AboutPage() {
 
       <h2>What's Available Now</h2>
       <ul>
-        <li>Sensitivity Finder — a progressive comparison process to find your ideal sensitivity</li>
+        <li>Sensitivity Finder: a progressive comparison process to find your ideal sensitivity</li>
         <li>Sensitivity Converter: carry your aim feel between games, with eDPI and cm/360 included</li>
         <li>Flick Trainer and Tracking Trainer: timed drills for the two core aim skills</li>
         <li>Reaction Time Test: measure your raw reflexes</li>
         <li>Mouse Polling Rate Test: check that your mouse reports as fast as it should</li>
-        <li>Crosshair Generator — design and export custom crosshairs for any game</li>
-        <li>Test history — all results saved locally on your device</li>
-        <li>Cloud sync — create an account to sync results across devices</li>
-        <li>Game selection — support for 8 popular FPS titles</li>
+        <li>Crosshair Generator: design and export custom crosshairs for any game</li>
+        <li>Test history: all results saved locally on your device</li>
+        <li>Cloud sync: create an account to sync results across devices</li>
+        <li>Game selection: support for 8 popular FPS titles</li>
       </ul>
 
       <h2>What's Coming</h2>

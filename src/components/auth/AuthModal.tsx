@@ -1,46 +1,52 @@
-import { useState, useEffect, useCallback } from 'react';
-import { createPortal } from 'react-dom';
-import { X, LogIn, UserPlus, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { Logo } from '@/components/ui/Logo';
-import { useAuth } from '@/hooks/useAuth';
+import { useState, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
+import { X, LogIn, UserPlus, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Logo } from "@/components/ui/Logo";
+import { useAuth } from "@/hooks/useAuth";
 
 interface AuthModalProps {
   open: boolean;
   onClose: () => void;
+  initialMode?: "signin" | "signup";
 }
 
-export function AuthModal({ open, onClose }: AuthModalProps) {
+export function AuthModal({
+  open,
+  onClose,
+  initialMode = "signin",
+}: AuthModalProps) {
   const { signIn, signUp } = useAuth();
-  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const reset = useCallback(() => {
-    setEmail('');
-    setPassword('');
-    setError('');
+    setEmail("");
+    setPassword("");
+    setError("");
     setLoading(false);
-    setMode('signin');
-  }, []);
+    setMode(initialMode);
+  }, [initialMode]);
 
   useEffect(() => {
     if (!open) reset();
-  }, [open, reset]);
+    else setMode(initialMode);
+  }, [open, reset, initialMode]);
 
   useEffect(() => {
     if (!open) return;
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === "Escape") onClose();
     };
-    document.addEventListener('keydown', handleEsc);
-    document.body.style.overflow = 'hidden';
+    document.addEventListener("keydown", handleEsc);
+    document.body.style.overflow = "hidden";
     return () => {
-      document.removeEventListener('keydown', handleEsc);
-      document.body.style.overflow = '';
+      document.removeEventListener("keydown", handleEsc);
+      document.body.style.overflow = "";
     };
   }, [open, onClose]);
 
@@ -48,10 +54,10 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
-    const fn = mode === 'signin' ? signIn : signUp;
+    const fn = mode === "signin" ? signIn : signUp;
     const { error: err } = await fn(email.trim(), password);
 
     if (err) {
@@ -68,7 +74,7 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
-      aria-label={mode === 'signin' ? 'Sign in' : 'Create account'}
+      aria-label={mode === "signin" ? "Sign in" : "Create account"}
     >
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-[fadeIn_0.15s_ease-out]"
@@ -91,12 +97,12 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
               <Logo size="md" />
             </div>
             <h2 className="mt-5 font-display text-xl font-bold tracking-tight text-ink">
-              {mode === 'signin' ? 'Welcome back' : 'Create your account'}
+              {mode === "signin" ? "Welcome back" : "Create your account"}
             </h2>
             <p className="mt-1.5 text-sm text-ink-muted">
-              {mode === 'signin'
-                ? 'Sign in to sync your test history across devices.'
-                : 'Create an account to save and sync your results to the cloud.'}
+              {mode === "signin"
+                ? "Sign in to sync your test history across devices."
+                : "Create an account to save and sync your results to the cloud."}
             </p>
           </div>
 
@@ -129,7 +135,9 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={6}
-              autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+              autoComplete={
+                mode === "signin" ? "current-password" : "new-password"
+              }
             />
 
             <Button
@@ -139,15 +147,15 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
               fullWidth
               disabled={loading}
             >
-              {mode === 'signin' ? (
+              {mode === "signin" ? (
                 <>
                   <LogIn className="h-5 w-5" />
-                  {loading ? 'Signing in...' : 'Sign In'}
+                  {loading ? "Signing in..." : "Sign In"}
                 </>
               ) : (
                 <>
                   <UserPlus className="h-5 w-5" />
-                  {loading ? 'Creating account...' : 'Create Account'}
+                  {loading ? "Creating account..." : "Create Account"}
                 </>
               )}
             </Button>
@@ -155,22 +163,24 @@ export function AuthModal({ open, onClose }: AuthModalProps) {
 
           <div className="mt-5 text-center">
             <p className="text-sm text-ink-muted">
-              {mode === 'signin' ? "Don't have an account?" : 'Already have an account?'}{' '}
+              {mode === "signin"
+                ? "Don't have an account?"
+                : "Already have an account?"}{" "}
               <button
                 type="button"
                 onClick={() => {
-                  setMode(mode === 'signin' ? 'signup' : 'signin');
-                  setError('');
+                  setMode(mode === "signin" ? "signup" : "signin");
+                  setError("");
                 }}
                 className="font-medium text-accent-purple transition-colors hover:text-accent-magenta focus-ring rounded-lg"
               >
-                {mode === 'signin' ? 'Sign up' : 'Sign in'}
+                {mode === "signin" ? "Sign up" : "Sign in"}
               </button>
             </p>
           </div>
         </div>
       </div>
     </div>,
-    document.body
+    document.body,
   );
 }

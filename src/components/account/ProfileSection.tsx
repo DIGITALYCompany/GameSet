@@ -1,3 +1,4 @@
+import { GameIcon } from '@/components/games/GameIcon';
 import { AVATARS, type AvatarKey } from './avatars';
 import { useEffect, useState } from 'react';
 import { Check, Loader2 } from 'lucide-react';
@@ -117,7 +118,7 @@ export function ProfileSection({ profile, email, onSave }: Props) {
                 )}
               >
                 <span className="flex items-center gap-3">
-                  <span className="h-2 w-2 rounded-full" style={{ backgroundColor: game.color }} />
+                  <GameIcon gameId={game.id} size="xs" />
                   {game.name}
                 </span>
                 {active && <Check className="h-4 w-4 text-accent-purple-light" />}

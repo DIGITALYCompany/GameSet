@@ -1,3 +1,5 @@
+import { GameIcon } from '@/components/games/GameIcon';
+import { GAMES } from '@/data/games';
 import { Crosshair } from 'lucide-react';
 import { AVATARS, type AvatarKey } from './avatars';
 import { cn } from '@/utils/cn';
@@ -42,6 +44,8 @@ export function Avatar({ value, size = 'md' }: { value: string | null; size?: 's
 }
 
 export function GameMark({ name, color, size = 'md' }: { name: string; color?: string; size?: 'sm' | 'md' }) {
+  const game = GAMES.find(item => item.name === name);
+  if (game) return <GameIcon gameId={game.id} size={size === 'sm' ? 'sm' : 'md'} />;
   const initials = name.split(/[\s/]+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
   return (
     <div

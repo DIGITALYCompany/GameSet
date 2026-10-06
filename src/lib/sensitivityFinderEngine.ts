@@ -14,7 +14,7 @@ import type { ComparisonPair, FinderState } from '@/types';
  *
  * After all rounds, the final result is the midpoint of the remaining range.
  *
- * The algorithm is deterministic — given the same initial sensitivity and
+ * The algorithm is deterministic: given the same initial sensitivity and
  * the same sequence of choices, it always produces the same result.
  * No randomness is involved.
  */
@@ -29,7 +29,7 @@ export class SensitivityFinderEngine {
 
   private buildInitialState(sens: number, rounds: number): FinderState {
     // Create a symmetric range around the player's current sensitivity.
-    // The range spans from sens/2 to sens*1.5, giving enough room for
+    // The range spans from sens/2?sens*1.5, giving enough room for
     // meaningful comparison while staying within realistic bounds.
     const lowBound = sens * 0.5;
     const highBound = sens * 1.5;
@@ -80,14 +80,14 @@ export class SensitivityFinderEngine {
     };
   }
 
-  /** User chose the lower value — narrow range toward the lower half. */
+  /** User chose the lower value: narrow range toward the lower half. */
   selectLower(): void {
     if (this.state.phase !== 'testing') return;
     this.state.history.push(this.state.lower);
     this.advance(this.state.lowBound, this.state.higher);
   }
 
-  /** User chose the higher value — narrow range toward the upper half. */
+  /** User chose the higher value: narrow range toward the upper half. */
   selectHigher(): void {
     if (this.state.phase !== 'testing') return;
     this.state.history.push(this.state.higher);
@@ -115,7 +115,7 @@ export class SensitivityFinderEngine {
     this.state.higher = higher;
   }
 
-  /** Both values felt identical — the sweet spot lies between them, so finish now. */
+  /** Both values felt identical: the sweet spot lies between them, so finish now. */
   selectSame(): void {
     if (this.state.phase !== 'testing') return;
     this.state.lowBound = this.state.lower;

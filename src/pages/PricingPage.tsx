@@ -48,7 +48,6 @@ export function PricingPage() {
   return (
     <Layout>
       <div className="relative">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-[480px] bg-[radial-gradient(ellipse_at_top,rgba(142,59,255,0.16),transparent_70%)]" />
 
         <div className="relative mx-auto max-w-6xl px-4 pb-20 pt-12 sm:px-6 sm:pt-20">
           <header className="mx-auto max-w-2xl text-center">

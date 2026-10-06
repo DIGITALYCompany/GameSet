@@ -4,11 +4,11 @@ import { User, Crown } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/utils/cn';
+import { GamesMenu } from './GamesMenu';
 
 const NAV_LINKS = [
-  { label: 'Games', to: '/games' },
   { label: 'Tools', to: '/tools' },
-  { label: 'My setup', to: '/setup' },
+  { label: 'Setup', to: '/setup' },
 ];
 
 interface NavbarProps {
@@ -31,7 +31,7 @@ export function Navbar({ onOpenAuth }: NavbarProps) {
     <header className="sticky top-0 z-40 px-3 pt-3 sm:px-4">
       <div
         className={cn(
-          'mx-auto flex h-14 max-w-6xl items-center justify-between rounded-2xl border px-3 transition-all duration-500 ease-smooth sm:px-4',
+          'relative mx-auto flex h-14 max-w-6xl items-center justify-between rounded-2xl border px-3 transition-all duration-500 ease-smooth sm:px-4',
           scrolled
             ? 'border-white/[0.08] bg-[rgba(8,8,14,0.78)] shadow-[0_12px_40px_-12px_rgba(0,0,0,0.7)] backdrop-blur-2xl'
             : 'border-white/[0.07] bg-base-surface/70 backdrop-blur-xl'
@@ -45,6 +45,7 @@ export function Navbar({ onOpenAuth }: NavbarProps) {
           className="hidden items-center gap-3 md:flex"
           aria-label="Main navigation"
         >
+          <GamesMenu />
           {NAV_LINKS.map((link) => {
             const active = pathname === link.to || pathname.startsWith(`${link.to}/`);
             return (

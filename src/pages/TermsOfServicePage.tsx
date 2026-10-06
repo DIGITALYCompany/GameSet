@@ -85,7 +85,7 @@ export function TermsOfServicePage() {
         We may suspend or terminate your access to the Service at any time,
         without notice or liability, for any reason. Since your data is stored
         locally, termination of access does not result in deletion of your
-        data — you control that through your browser.
+        data. You control that through your browser.
       </p>
 
       <h2>Contact Us</h2>

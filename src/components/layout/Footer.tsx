@@ -1,3 +1,5 @@
+import { GameIcon } from '@/components/games/GameIcon';
+import type { GameId } from '@/types';
 import { Link, useLocation } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Logo } from '@/components/ui/Logo';
@@ -14,7 +16,7 @@ const PLATFORM_LINKS = [
   { label: 'Settings', to: '/settings' },
 ];
 
-function Column({ title, links }: { title: string; links: { label: string; to: string }[] }) {
+function Column({ title, links }: { title: string; links: { label: string; to: string; gameId?: GameId }[] }) {
   return (
     <div>
       <h4 className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-dim">{title}</h4>
@@ -26,7 +28,7 @@ function Column({ title, links }: { title: string; links: { label: string; to: s
               className="group inline-flex items-center gap-1 text-sm text-ink-muted transition-colors duration-200 hover:text-ink"
             >
               <span className="h-px w-0 bg-accent-purple-light transition-all duration-300 ease-smooth group-hover:w-2.5" />
-              {l.label}
+              {l.gameId && <GameIcon gameId={l.gameId} size="xs" />}{l.label}
             </Link>
           </li>
         ))}
@@ -38,7 +40,7 @@ function Column({ title, links }: { title: string; links: { label: string; to: s
 export function Footer() {
   const { pathname } = useLocation();
   const tools = getAvailableTools().slice(0, 6).map((t) => ({ label: t.name, to: t.route }));
-  const games = GAMES.slice(0, 5).map((g) => ({ label: g.name, to: `/games/${g.slug}` }));
+  const games = GAMES.slice(0, 5).map((g) => ({ label: g.name, to: `/games/${g.slug}`, gameId: g.id }));
 
   return (
     <footer className="relative mt-16 border-t border-border bg-base-bg/70 backdrop-blur-sm">

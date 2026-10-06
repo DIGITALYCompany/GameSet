@@ -356,3 +356,45 @@ body::after {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }
 .reduced-motion, .reduced-motion * { scroll-behavior: auto !important; }
+
+@layer components {
+  .tool-workspace-header { background: radial-gradient(ellipse at 95% 10%, color-mix(in srgb, var(--tool-accent) 12%, transparent), transparent 70%), linear-gradient(130deg,#171721,#0f0f18); }
+  .tool-eyebrow { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--tool-accent); }
+  .tool-header-art .tool-art { height: 160px; }
+  .tool-guide { padding: 20px; border: 1px solid #ffffff12; border-radius: 14px; background: linear-gradient(145deg,#171721aa,#0f0f18bb); }
+  .tool-step { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex-shrink: 0; border-radius: 6px; border: 1px solid color-mix(in srgb, var(--tool-accent) 25%, transparent); color: var(--tool-accent); font: 10px 'JetBrains Mono',monospace; background: color-mix(in srgb, var(--tool-accent) 6%, transparent); }
+  .tool-metric { position: relative; overflow: hidden; border-radius: 12px; border-color: #ffffff14; background: linear-gradient(145deg,#1b1b29,#111119); padding: 16px 12px; text-align: left; box-shadow: none; }
+  .tool-metric::after { content: ''; position: absolute; top: 0; left: 12px; width: 25px; height: 2px; background: var(--tool-accent); opacity: .5; }
+  .tool-metric > p:first-child { font: 9px 'JetBrains Mono',monospace; letter-spacing: .12em; color: #aaaabd; }
+  .tool-metric > p:last-child { margin-top: 8px; font-size: 23px; font-weight: 500; }
+  .tool-main > .rounded-xl, .tool-main > .rounded-lg { border-radius: 14px; border-color: #ffffff14; }
+  .training-stage { background: radial-gradient(ellipse at 50% 45%,color-mix(in srgb,var(--tool-accent) 6%,transparent),transparent 65%),linear-gradient(#ffffff06 1px,transparent 1px),linear-gradient(90deg,#ffffff06 1px,transparent 1px),#0c1018; background-size: auto,32px 32px,32px 32px,auto; }
+  .training-stage::before { content: ''; position: absolute; inset: 20px; border: 1px solid color-mix(in srgb,var(--tool-accent) 8%,transparent); pointer-events: none; border-radius: 8px; }
+  .training-stage::after { content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 170px; height: 170px; border: 1px dashed color-mix(in srgb,var(--tool-accent) 7%,transparent); border-radius: 50%; pointer-events: none; }
+  .reaction-stage { background-image: linear-gradient(#ffffff04 1px,transparent 1px),linear-gradient(90deg,#ffffff04 1px,transparent 1px); background-size:32px 32px; }
+  .tool-main input:not([type='range']):not([type='checkbox']), .tool-main select { min-height: 46px; background-color:#0b0c14; border-color:#ffffff1c; }
+}
+@layer components {
+  .sensitivity-session { background-image: radial-gradient(ellipse 80% 650px at 50% 0%,#8e3bff18,transparent 75%); }
+  .tool-result-panel { background-image: radial-gradient(ellipse at 50% 0%,#b994ff0f,transparent 70%); }
+}
+@layer components {
+  .game-card-cover { height: 150px; }
+  .game-card-cover .arena-game-number { z-index: 1; color: #dedee8; }
+  .game-card-cover .arena-game-crosshair { display: none; }
+}
+@layer components {
+  .arena-game { --game-card-bg: #11111b; background-color: var(--game-card-bg); }
+  .game-card-cover { background-color: var(--game-card-bg); }
+  .game-card-shade { background: linear-gradient(to top, var(--game-card-bg) 0%, rgba(0,0,0,.2) 58%, rgba(0,0,0,.35) 100%); }
+  .game-card-cover .arena-game-number { z-index: 20; }
+}
+@layer components {
+  .next-move-design { --tool-accent: #f3a5da; }
+  .next-move-card { background: linear-gradient(145deg,#1a1927,#101019); }
+  .next-move-card:hover { border-color: color-mix(in srgb,var(--tool-accent) 40%,transparent); box-shadow: 0 10px 24px #0003; transform: translateY(-3px); }
+  .next-move-icon { display: flex; align-items:center; justify-content:center; height:32px; width:32px; border-radius:8px; color:var(--tool-accent); background:color-mix(in srgb,var(--tool-accent) 9%,transparent); border:1px solid color-mix(in srgb,var(--tool-accent) 20%,transparent); }
+  .next-move-card .tool-art { height:65px; margin-top:12px; margin-bottom:12px; }
+  .next-move-category { font:8px 'JetBrains Mono',monospace; letter-spacing:.14em; color:var(--tool-accent); }
+  .next-move-action { color:var(--tool-accent); }
+}
