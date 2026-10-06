@@ -1,154 +1,54 @@
+﻿import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Activity, ArrowRight, ArrowUpRight, Crosshair, Target } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { ArrowRight, Bookmark, Check, Crosshair, Gamepad2, Plus, Target, TrendingUp, Clock } from 'lucide-react';
 import { GAMES } from '@/data/games';
+import { TOOLS } from '@/data/tools';
+import { useWorkspace } from '@/hooks/useWorkspace';
 import { formatDateTime } from '@/utils/helpers';
 import { round } from '@/utils/calculations';
 import type { AimTrainingScore } from '@/types';
-import { EmptyState, GameMark, SectionHeader, StatTile, type CloudTest } from './AccountUI';
+import { GameMark, SectionHeader, type CloudTest } from './AccountUI';
 
 interface Props {
   tests: CloudTest[];
   aimScores: AimTrainingScore[];
-  followedCount: number;
+  followedIds: string[];
   onOpenHistory: () => void;
+  onOpenSetup: () => void;
+  onOpenGames: () => void;
 }
 
-type ActivityItem =
-  | { kind: 'test'; date: string; test: CloudTest }
-  | { kind: 'aim'; date: string; score: AimTrainingScore };
-
-export function OverviewSection({ tests, aimScores, followedCount, onOpenHistory }: Props) {
+export function OverviewSection({ tests, aimScores, followedIds, onOpenHistory, onOpenSetup, onOpenGames }: Props) {
+  const { data, status } = useWorkspace();
+  const [mode, setMode] = useState<AimTrainingScore['game_mode']>('flick');
+  const sessions = aimScores.filter(score => score.game_mode === mode).slice(0, 12).reverse();
   const latest = tests[0];
-  const latestGame = latest ? GAMES.find((g) => g.id === latest.game_id) : undefined;
-  const avgAccuracy = aimScores.length
-    ? round(aimScores.reduce((s, a) => s + Number(a.accuracy), 0) / aimScores.length, 1)
-    : null;
-  const best = aimScores.length ? Math.max(...aimScores.map((s) => s.score)) : null;
+  const followedGames = GAMES.filter(game => followedIds.includes(game.id));
+  const favorites = TOOLS.filter(tool => data.favorites.includes(tool.id));
+  const chartPoints = sessions.map((score, index) => ({ x: 24 + index * 452 / Math.max(sessions.length - 1, 1), y: 140 - Math.min(100, Math.max(0, Number(score.accuracy))) * 1.12 }));
+  const accuracy = sessions.length ? round(sessions.reduce((sum, score) => sum + Number(score.accuracy), 0) / sessions.length, 1) : null;
+  const activity = [...tests.slice(0, 5).map(test => ({ id: `test-${test.id}`, date: test.created_at, label: `${test.game_name} sensitivity test`, value: String(round(Number(test.sensitivity), 3)), icon: Crosshair })), ...aimScores.slice(0, 5).map(score => ({ id: `aim-${score.id}`, date: score.created_at, label: `${score.game_mode} training`, value: `${round(Number(score.accuracy), 1)}%`, icon: Target }))].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
+  const syncLabel = status === 'synced' ? 'Synced to your account' : status === 'syncing' ? 'Saving your workspace…' : status === 'error' ? 'Sync needs attention' : status === 'loading' ? 'Loading workspace…' : 'Saved on this device';
+  const steps = [{ title: 'Find your sensitivity', done: tests.length > 0, href: '/sensitivity' }, { title: 'Save your first setup', done: data.setups.length > 0, action: onOpenSetup }, { title: 'Try an aim session', done: aimScores.length > 0, href: '/tools/aim-trainer' }];
 
-  const activity: ActivityItem[] = [
-    ...tests.slice(0, 5).map((test) => ({ kind: 'test' as const, date: test.created_at, test })),
-    ...aimScores.slice(0, 5).map((score) => ({ kind: 'aim' as const, date: score.created_at, score })),
-  ]
-    .sort((a, b) => b.date.localeCompare(a.date))
-    .slice(0, 5);
+  return <div className="space-y-6">
+    <section className="relative overflow-hidden rounded-3xl border border-accent-purple/25 bg-gradient-to-br from-accent-purple/15 via-base-surface to-base-bg p-6 sm:p-8">
+      <Crosshair aria-hidden="true" className="pointer-events-none absolute -right-8 -top-8 h-56 w-56 text-accent-purple/10" strokeWidth={.8} />
+      <div className="relative grid gap-6 sm:grid-cols-[1fr_auto] sm:items-center"><div><p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-purple-light">Ready for your next session?</p><h2 className="mt-3 max-w-sm font-display text-3xl font-semibold tracking-tight text-ink">Build your setup.<br />Make every session count.</h2><p className="mt-3 max-w-md text-sm leading-relaxed text-ink-muted">Pick up where you left off, keep your settings together and see your latest results.</p><div className="mt-5 flex flex-wrap gap-3"><Link to="/tools/aim-trainer" className="focus-ring inline-flex items-center gap-2 rounded-xl bg-accent-purple px-4 py-2.5 text-sm font-semibold text-white hover:bg-accent-purple-light"><Target className="h-4 w-4" />Start training</Link><button onClick={onOpenSetup} className="focus-ring inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-ink"><Bookmark className="h-4 w-4" />My setups</button></div></div><div className="min-w-[170px] rounded-2xl border border-white/10 bg-black/20 p-5"><p className="text-xs text-ink-dim">Latest sensitivity test</p>{latest ? <><p className="mt-3 font-display text-4xl font-semibold text-ink">{round(Number(latest.sensitivity), 3)}</p><p className="mt-2 text-sm text-ink-muted">{latest.game_name}</p><p className="mt-3 text-xs text-accent-purple-light">{latest.dpi} DPI · {round(Number(latest.cm360), 1)} cm/360</p></> : <><Crosshair className="mt-4 h-8 w-8 text-ink-dim" /><p className="mt-3 text-sm text-ink-muted">Your first result starts here.</p><Link to="/sensitivity" className="focus-ring mt-3 inline-flex items-center gap-1 rounded text-xs text-accent-purple-light">Find my sensitivity <ArrowRight className="h-3 w-3" /></Link></>}</div></div>
+    </section>
 
-  return (
-    <div className="space-y-10">
-      <section>
-        {latest ? (
-          <div className="border-gradient relative overflow-hidden rounded-2xl p-6 sm:p-8">
-            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-accent-purple/20 blur-3xl" />
-            <div className="relative flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-purple-light">
-                  Your current sensitivity
-                </p>
-                <div className="mt-3 flex items-center gap-3">
-                  <GameMark name={latest.game_name} color={latestGame?.color} size="sm" />
-                  <p className="text-sm font-medium text-ink-muted">{latest.game_name}</p>
-                </div>
-                <p className="mt-3 font-display text-5xl font-semibold tabular-nums tracking-tight text-ink">
-                  {round(Number(latest.sensitivity), 3)}
-                </p>
-                <p className="mt-2 text-sm text-ink-dim">Found on {formatDateTime(latest.created_at)}</p>
-              </div>
-              <div className="grid grid-cols-3 gap-6 sm:gap-8">
-                <Metric label="DPI" value={String(latest.dpi)} />
-                <Metric label="eDPI" value={String(round(Number(latest.edpi), 0))} />
-                <Metric label="cm/360" value={String(round(Number(latest.cm360), 1))} />
-              </div>
-            </div>
-          </div>
-        ) : (
-          <EmptyState
-            icon={Crosshair}
-            title="No sensitivity saved yet"
-            text="Run the finder once and your ideal sensitivity will live here, synced across your devices."
-            action={
-              <Link to="/sensitivity">
-                <Button variant="primary" size="sm">
-                  Find my sensitivity
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            }
-          />
-        )}
+    <section aria-label="Account at a glance" className="grid grid-cols-2 gap-3 xl:grid-cols-4">{[{ icon: Crosshair, label: 'Sensitivity tests', value: tests.length, hint: 'Saved to your account' }, { icon: Bookmark, label: 'Saved setups', value: data.setups.length, hint: syncLabel }, { icon: Gamepad2, label: 'Followed games', value: followedIds.length, hint: 'Your game collection' }, { icon: Target, label: 'Recent aim sessions', value: aimScores.length, hint: 'Latest 20 saved sessions' }].map(({ icon: Icon, label, value, hint }) => <div key={label} className="rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4"><div className="flex items-center justify-between gap-2"><p className="text-xs text-ink-muted">{label}</p><Icon className="h-4 w-4 shrink-0 text-accent-purple-light" /></div><p className="mt-3 font-display text-3xl font-semibold tabular-nums text-ink">{value}</p><p className="mt-2 text-[10px] leading-relaxed text-ink-dim">{hint}</p></div>)}</section>
+
+    {!steps.every(step => step.done) && <section className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5"><div className="flex items-center justify-between"><h2 className="font-display text-base font-semibold text-ink">Make yourself at home</h2><span className="text-xs text-ink-dim">{steps.filter(step => step.done).length} / 3</span></div><div className="mt-4 grid gap-2 sm:grid-cols-3">{steps.map((step, index) => { const content = <><span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs ${step.done ? 'bg-accent-green/10 text-accent-green' : 'bg-white/5 text-ink-muted'}`}>{step.done ? <Check className="h-3 w-3" /> : index + 1}</span><span>{step.title}</span></>; const classes = 'focus-ring flex items-center gap-2 rounded-xl border border-white/5 p-3 text-left text-xs text-ink-muted hover:bg-white/5'; return step.href ? <Link key={step.title} to={step.href} className={classes}>{content}</Link> : <button key={step.title} onClick={step.action} className={classes}>{content}</button>; })}</div></section>}
+
+    <div className="grid gap-6 xl:grid-cols-[1.35fr_1fr]">
+      <section className="min-w-0 rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 sm:p-6"><div className="flex flex-wrap items-start justify-between gap-3"><div><h2 className="flex items-center gap-2 font-display text-lg font-semibold text-ink"><TrendingUp className="h-4 w-4 text-accent-purple-light" />Training snapshot</h2><p className="mt-1 text-xs text-ink-dim">Accuracy · up to 12 sessions within your latest 20</p></div><select aria-label="Training mode" value={mode} onChange={event => setMode(event.target.value as typeof mode)} className="focus-ring rounded-lg border border-white/10 bg-base-surface px-3 py-2 text-xs text-ink"><option value="flick">Flick</option><option value="tracking">Tracking</option><option value="reaction">Reaction</option></select></div>
+        {sessions.length ? <><div className="mt-6 flex items-baseline gap-2"><p className="font-display text-3xl font-semibold text-ink">{accuracy}%</p><span className="text-xs text-ink-dim">average accuracy · {mode}</span></div><svg viewBox="0 0 500 170" className="mt-4 w-full" role="img" aria-label={`${mode} accuracy across ${sessions.length} saved sessions, oldest to newest`}><defs><linearGradient id="account-accuracy-fill" x1="0" y1="0" x2="0" y2="1"><stop stopColor="#A56BFF" stopOpacity=".25" /><stop offset="1" stopColor="#A56BFF" stopOpacity="0" /></linearGradient></defs>{[0, 50, 100].map(value => <g key={value}><line x1="24" x2="476" y1={140 - value * 1.12} y2={140 - value * 1.12} stroke="white" strokeOpacity=".06" /><text x="0" y={144 - value * 1.12} fill="#9292A0" fontSize="9">{value}</text></g>)}{sessions.length > 1 && <><path d={`M${chartPoints.map(point => `${point.x},${point.y}`).join(' L')} L476,140 L24,140 Z`} fill="url(#account-accuracy-fill)" /><polyline points={chartPoints.map(point => `${point.x},${point.y}`).join(' ')} fill="none" stroke="#A56BFF" strokeWidth="2.5" strokeLinejoin="round" /></>}{chartPoints.map((point, index) => <circle key={sessions[index].id} cx={point.x} cy={point.y} r="4" fill="#A56BFF"><title>{formatDateTime(sessions[index].created_at)}: {sessions[index].accuracy}%</title></circle>)}</svg><div className="flex justify-between text-[10px] text-ink-dim"><span>Oldest session</span><span>Latest session</span></div><details className="mt-3 text-xs text-ink-dim"><summary className="focus-ring cursor-pointer rounded">View chart data</summary><ul className="mt-2 space-y-1">{sessions.map(score => <li key={score.id}>{formatDateTime(score.created_at)} · {score.accuracy}% accuracy</li>)}</ul></details></> : <div className="flex min-h-[220px] flex-col items-center justify-center text-center"><TrendingUp className="h-9 w-9 text-ink-dim/50" /><p className="mt-4 text-sm font-medium text-ink">Your progress starts with one session.</p><p className="mt-2 max-w-xs text-xs leading-relaxed text-ink-dim">Saved {mode} results appear here. No results are available yet.</p><Link to={mode === 'tracking' ? '/tools/tracking-trainer' : mode === 'reaction' ? '/tools/reaction-time-test' : '/tools/aim-trainer'} className="focus-ring mt-4 rounded text-xs font-medium text-accent-purple-light">Try {mode} training →</Link></div>}
       </section>
-
-      <section>
-        <SectionHeader title="At a glance" />
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatTile label="Sens tests" value={String(tests.length)} />
-          <StatTile label="Aim sessions" value={String(aimScores.length)} />
-          <StatTile label="Avg accuracy" value={avgAccuracy !== null ? `${avgAccuracy}%` : 'N/A'} />
-          <StatTile label="Best score" value={best !== null ? String(best) : 'N/A'} hint={`${followedCount} games followed`} />
-        </div>
-      </section>
-
-      <section>
-        <SectionHeader
-          title="Recent activity"
-          action={
-            activity.length > 0 && (
-              <button
-                type="button"
-                onClick={onOpenHistory}
-                className="inline-flex items-center gap-1 text-sm font-medium text-ink-muted transition-colors hover:text-ink focus-ring rounded"
-              >
-                View all
-                <ArrowUpRight className="h-3.5 w-3.5" />
-              </button>
-            )
-          }
-        />
-        {activity.length === 0 ? (
-          <EmptyState icon={Activity} title="Nothing here yet" text="Your tests and training sessions will show up here." />
-        ) : (
-          <ul className="divide-y divide-white/[0.06] overflow-hidden rounded-xl border border-white/[0.06] bg-white/[0.015]">
-            {activity.map((item) =>
-              item.kind === 'test' ? (
-                <li key={`t-${item.test.id}`} className="flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-white/[0.02]">
-                  <GameMark
-                    name={item.test.game_name}
-                    color={GAMES.find((g) => g.id === item.test.game_id)?.color}
-                    size="sm"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-ink">Sensitivity test · {item.test.game_name}</p>
-                    <p className="text-xs text-ink-dim">{formatDateTime(item.date)}</p>
-                  </div>
-                  <p className="font-mono text-sm tabular-nums text-ink">{round(Number(item.test.sensitivity), 3)}</p>
-                </li>
-              ) : (
-                <li key={`a-${item.score.id}`} className="flex items-center gap-4 px-4 py-3.5 transition-colors hover:bg-white/[0.02]">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-accent-purple/20 bg-accent-purple/10">
-                    <Target className="h-4 w-4 text-accent-purple-light" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium capitalize text-ink">{item.score.game_mode} training</p>
-                    <p className="text-xs text-ink-dim">{formatDateTime(item.date)}</p>
-                  </div>
-                  <p className="font-mono text-sm tabular-nums text-ink">
-                    {item.score.score}
-                    <span className="ml-2 text-ink-dim">{round(Number(item.score.accuracy), 0)}%</span>
-                  </p>
-                </li>
-              )
-            )}
-          </ul>
-        )}
-      </section>
+      <section className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 sm:p-6"><SectionHeader title="Your games" action={<button onClick={onOpenGames} aria-label="Manage followed games" className="focus-ring rounded-lg p-2 text-ink-dim hover:bg-white/5"><Plus className="h-4 w-4" /></button>} />{followedGames.length ? <ul className="space-y-3">{followedGames.map(game => { const setup = data.setups.find(item => item.gameId === game.id); return <li key={game.id}><Link to={`/games/${game.slug}`} className="focus-ring flex items-center gap-3 rounded-xl border border-white/5 bg-white/[0.02] p-3 hover:border-accent-purple/30"><GameMark name={game.name} color={game.color} size="sm" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium text-ink">{game.name}</p><p className="mt-1 text-[10px] text-ink-dim">{setup ? `${setup.dpi} DPI · Sens ${setup.sensitivity}` : 'No setup saved yet'}</p></div><ArrowRight className="h-3.5 w-3.5 text-ink-dim" /></Link></li>; })}</ul> : <div className="py-8 text-center"><Gamepad2 className="mx-auto h-9 w-9 text-ink-dim/50" /><p className="mt-4 text-sm text-ink-muted">Keep your favorite games close.</p><Link to="/games" className="focus-ring mt-4 inline-block rounded text-xs font-medium text-accent-purple-light">Explore games →</Link></div>}<button onClick={onOpenGames} className="focus-ring mt-5 w-full rounded-xl border border-white/10 py-2.5 text-xs font-medium text-ink-muted hover:bg-white/5">Manage my games</button></section>
     </div>
-  );
-}
 
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-dim">{label}</p>
-      <p className="mt-1 font-display text-xl font-semibold tabular-nums text-ink">{value}</p>
-    </div>
-  );
+    <section className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-5 sm:p-6"><SectionHeader title="Recent activity" action={<button onClick={onOpenHistory} className="focus-ring inline-flex items-center gap-1 rounded text-xs text-accent-purple-light">History <ArrowRight className="h-3 w-3" /></button>} />{activity.length ? <ul className="divide-y divide-white/5">{activity.map(({ id, date, label, value, icon: Icon }) => <li key={id} className="flex items-center gap-3 py-3"><span className="rounded-xl bg-white/5 p-2.5"><Icon className="h-4 w-4 text-accent-purple-light" /></span><div className="min-w-0 flex-1"><p className="truncate text-sm capitalize text-ink">{label}</p><p className="mt-1 text-[10px] text-ink-dim">{formatDateTime(date)}</p></div><span className="text-sm font-semibold tabular-nums text-ink">{value}</span></li>)}</ul> : <p className="flex items-center gap-2 py-5 text-sm text-ink-dim"><Clock className="h-4 w-4" />Your next test or saved session will appear here.</p>}</section>
+    {favorites.length > 0 && <section><SectionHeader title="Your shortcuts" /><div className="grid gap-3 sm:grid-cols-2">{favorites.map(tool => <Link key={tool.id} to={tool.route} className="focus-ring flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.025] p-4 text-sm text-ink hover:border-accent-purple/30">{tool.name}<ArrowRight className="h-4 w-4 text-ink-dim" /></Link>)}</div></section>}
+  </div>;
 }

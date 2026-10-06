@@ -1,6 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
+  ArrowRight,
+  LogOut,
+  Target,
   Bookmark,
   Clock,
   Crown,
@@ -23,6 +26,7 @@ import { GamesSection } from "@/components/account/GamesSection";
 import { HistorySection } from "@/components/account/HistorySection";
 import { PlanSection, TierBadge } from "@/components/account/PlanSection";
 import { SettingsSection } from "@/components/account/SettingsSection";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
 import { saveSelectedGame } from "@/lib/storage";
@@ -52,6 +56,7 @@ const EMPTY_PROFILE: ProfileData = {
 export function AccountPage() {
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
+  const { status: workspaceStatus } = useWorkspace();
   const [searchParams, setSearchParams] = useSearchParams();
   const requested = searchParams.get("tab");
   const tab: Tab = TABS.some((t) => t.id === requested)
@@ -121,9 +126,7 @@ export function AccountPage() {
   useEffect(() => {
     if (loading) return;
     if (!userId) {
-      const next = new URLSearchParams(window.location.search);
-      next.delete("tab");
-      navigate(`/setup?${next}`, { replace: true });
+      navigate("/auth", { replace: true });
       return;
     }
     loadAll();
@@ -206,22 +209,19 @@ export function AccountPage() {
     <Layout>
       <div className="relative">
 
-        <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-10 sm:px-6 sm:pt-14">
-          <header className="flex flex-col gap-5 sm:flex-row sm:items-center">
-            <Avatar value={profile.avatar_emoji} size="lg" />
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-3">
-                <h1 className="truncate font-display text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
-                  {profile.username || "Player"}
-                </h1>
-                <TierBadge tier={profile.subscription_tier} />
+        <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-8 sm:px-6 sm:pt-10">
+          <header className="flex flex-wrap items-center justify-between gap-5 rounded-3xl border border-white/[0.08] bg-white/[0.025] p-5 sm:p-7">
+            <div className="flex min-w-0 items-center gap-4">
+              <Avatar value={profile.avatar_emoji} size="md" />
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-purple-light">Player dashboard</p>
+                <div className="mt-2 flex flex-wrap items-center gap-3"><h1 className="max-w-[220px] truncate font-display text-2xl font-semibold tracking-tight text-ink sm:max-w-none sm:text-3xl">Hey, {profile.username || "Player"}.</h1>{!dataLoading && <TierBadge tier={profile.subscription_tier} />}</div>
+                <p className="mt-2 text-xs text-ink-dim">{joined ? `Member since ${joined}` : "Your personal player space"}</p>
               </div>
-              <p className="mt-1.5 text-sm text-ink-muted">
-                {user.email}
-                {joined && (
-                  <span className="text-ink-dim"> · Member since {joined}</span>
-                )}
-              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="flex items-center gap-2 text-xs text-ink-dim"><span className={cn("h-1.5 w-1.5 rounded-full", workspaceStatus === "synced" ? "bg-accent-green" : workspaceStatus === "error" ? "bg-accent-orange" : "bg-ink-dim")} />{workspaceStatus === "synced" ? "Workspace synced" : workspaceStatus === "error" ? "Workspace sync issue" : workspaceStatus === "syncing" ? "Syncing workspace?" : "Loading workspace?"}</span>
+              <button type="button" onClick={() => switchTab("profile")} className="focus-ring rounded-xl border border-white/10 px-4 py-2.5 text-xs font-medium text-ink hover:bg-white/5">Edit profile</button>
             </div>
           </header>
 
@@ -243,12 +243,12 @@ export function AccountPage() {
             </div>
           )}
 
-          <div className="mt-10 grid gap-8 lg:grid-cols-[220px_1fr] lg:gap-12">
+          <div className="mt-6 grid items-start gap-6 lg:grid-cols-[210px_1fr]">
             <nav
               aria-label="Account sections"
-              className="-mx-4 overflow-x-auto px-4 lg:mx-0 lg:overflow-visible lg:px-0"
+              className="overflow-x-auto rounded-2xl border border-white/[0.08] bg-white/[0.02] p-2 lg:sticky lg:top-24 lg:overflow-visible lg:p-3"
             >
-              <ul className="flex gap-1 lg:sticky lg:top-24 lg:flex-col">
+              <ul className="flex gap-1 lg:flex-col">
                 {TABS.map(({ id, label, icon: Icon }) => {
                   const active = tab === id;
                   return (
@@ -258,9 +258,9 @@ export function AccountPage() {
                         onClick={() => switchTab(id)}
                         aria-current={active ? "page" : undefined}
                         className={cn(
-                          "group relative flex w-full items-center gap-3 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 focus-ring",
+                          "group relative flex w-full items-center gap-3 whitespace-nowrap rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200 focus-ring",
                           active
-                            ? "bg-white/[0.06] text-ink"
+                            ? "bg-accent-purple/15 text-ink"
                             : "text-ink-muted hover:bg-white/[0.03] hover:text-ink",
                         )}
                       >
@@ -284,9 +284,13 @@ export function AccountPage() {
                   );
                 })}
               </ul>
+              <div className="mt-5 hidden border-t border-white/10 pt-4 lg:block">
+                <Link to="/tools/aim-trainer" className="focus-ring flex items-center gap-2 rounded-xl p-3 text-xs font-medium text-ink-muted hover:bg-white/5"><Target className="h-4 w-4" />Quick training<ArrowRight className="ml-auto h-3 w-3" /></Link>
+                <button type="button" onClick={handleSignOut} className="focus-ring flex w-full items-center gap-2 rounded-xl p-3 text-xs text-ink-dim hover:bg-white/5"><LogOut className="h-4 w-4" />Sign out</button>
+              </div>
             </nav>
 
-            <div key={tab} className="min-w-0 animate-fade-in">
+            <div key={tab} className="min-w-0 animate-fade-in motion-reduce:animate-none">
               {tab === "setup" ? (
                 <SetupSection />
               ) : dataLoading ? (
@@ -307,7 +311,9 @@ export function AccountPage() {
                     <OverviewSection
                       tests={tests}
                       aimScores={aimScores}
-                      followedCount={followed.length}
+                      followedIds={followed}
+                      onOpenSetup={() => switchTab("setup")}
+                      onOpenGames={() => switchTab("games")}
                       onOpenHistory={() => switchTab("history")}
                     />
                   )}

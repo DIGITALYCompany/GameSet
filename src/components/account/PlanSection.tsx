@@ -1,119 +1,16 @@
-import { Link } from 'react-router-dom';
-import { ArrowRight, Check, Crown, Sparkles, Zap } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+﻿import { Link } from 'react-router-dom';
+import { ArrowRight, Crown, Sparkles, Clock, ShieldCheck } from 'lucide-react';
 import { cn } from '@/utils/cn';
-import { SUBSCRIPTION_PLANS } from '@/types';
 import type { SubscriptionTier } from '@/types';
 import { SectionHeader } from './AccountUI';
 
-const TIER_INFO: Record<SubscriptionTier, { label: string; icon: typeof Crown; badge: string }> = {
-  free: { label: 'Free', icon: Sparkles, badge: 'border-white/10 bg-white/[0.04] text-ink-muted' },
-  pro: { label: 'Pro', icon: Zap, badge: 'border-accent-purple/30 bg-accent-purple/15 text-accent-purple-light' },
-  elite: { label: 'Elite', icon: Crown, badge: 'border-accent-orange/30 bg-accent-orange/15 text-accent-orange' },
-};
-
 export function TierBadge({ tier }: { tier: SubscriptionTier }) {
-  const info = TIER_INFO[tier];
-  const Icon = info.icon;
-  return (
-    <span className={cn('inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider', info.badge)}>
-      <Icon className="h-3 w-3" />
-      {info.label}
-    </span>
-  );
+  const premium = tier !== 'free';
+  const Icon = premium ? Crown : Sparkles;
+  return <span className={cn('inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider', premium ? 'border-amber-200/25 bg-amber-200/10 text-amber-200' : 'border-white/10 bg-white/5 text-ink-muted')}><Icon className="h-3 w-3" />{premium ? 'Premium' : 'Free'}</span>;
 }
 
-interface Props {
-  tier: SubscriptionTier;
-  status: string | null;
-}
-
-export function PlanSection({ tier, status }: Props) {
-  const current = SUBSCRIPTION_PLANS.find((p) => p.tier === tier);
-  const isPremium = tier !== 'free';
-
-  return (
-    <div className="space-y-10">
-      <section>
-        <SectionHeader title="Current plan" />
-        <div className="border-gradient relative overflow-hidden rounded-2xl p-6 sm:p-8">
-          <div className="pointer-events-none absolute -right-16 -top-24 h-60 w-60 rounded-full bg-accent-purple/15 blur-3xl" />
-          <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <TierBadge tier={tier} />
-              <p className="mt-3 font-display text-3xl font-semibold tracking-tight text-ink">
-                {current ? (current.price === 0 ? 'Free' : `$${current.price.toFixed(2)}`) : TIER_INFO[tier].label}
-                {current && current.price > 0 && <span className="ml-1 text-base font-normal text-ink-dim">/{current.period}</span>}
-              </p>
-              <p className="mt-1 text-sm text-ink-muted">
-                {isPremium ? `Status: ${status ?? 'active'}` : current?.tagline ?? 'The essentials, free forever.'}
-              </p>
-            </div>
-            <Link to="/pricing">
-              <Button variant={isPremium ? 'secondary' : 'primary'}>
-                {isPremium ? 'Manage plan' : 'Upgrade'}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-          </div>
-          {current && (
-            <ul className="relative mt-6 grid gap-2.5 border-t border-white/[0.06] pt-6 sm:grid-cols-2">
-              {current.features.map((f) => (
-                <li key={f} className="flex items-start gap-2.5 text-sm text-ink-muted">
-                  <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent-green" />
-                  {f}
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </section>
-
-      <section>
-        <SectionHeader title="Compare plans" />
-        <div className="grid gap-3 md:grid-cols-3">
-          {SUBSCRIPTION_PLANS.map((plan) => {
-            const isCurrent = plan.tier === tier;
-            const Icon = TIER_INFO[plan.tier].icon;
-            return (
-              <div
-                key={plan.tier}
-                className={cn(
-                  'flex flex-col rounded-xl border p-5 transition-colors',
-                  isCurrent ? 'border-accent-purple/40 bg-accent-purple/[0.05]' : 'border-white/[0.06] bg-white/[0.015] hover:border-white/[0.12]'
-                )}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="flex items-center gap-2 text-sm font-semibold text-ink">
-                    <Icon className="h-4 w-4 text-ink-muted" />
-                    {plan.name}
-                  </span>
-                  {isCurrent && <span className="text-[11px] font-semibold uppercase tracking-wider text-accent-purple-light">Current</span>}
-                </div>
-                <p className="mt-3 font-display text-2xl font-semibold text-ink">
-                  ${plan.price.toFixed(2)}
-                  <span className="ml-1 text-xs font-normal text-ink-dim">/{plan.period}</span>
-                </p>
-                <ul className="mt-4 flex-1 space-y-2">
-                  {plan.features.slice(0, 4).map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-xs text-ink-muted">
-                      <Check className="mt-0.5 h-3 w-3 shrink-0 text-ink-dim" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                {!isCurrent && (
-                  <Link to="/pricing" className="mt-5 block">
-                    <Button variant={plan.highlighted ? 'primary' : 'secondary'} size="sm" fullWidth>
-                      {plan.price === 0 ? 'Switch to Free' : `Choose ${plan.name}`}
-                    </Button>
-                  </Link>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </section>
-    </div>
-  );
+export function PlanSection({ tier, status }: { tier: SubscriptionTier; status: string | null }) {
+  const premium = tier !== 'free';
+  return <div className="space-y-6"><SectionHeader title="Your membership" description="Your current plan and the next chapter of GameSet." /><section className="rounded-3xl border border-white/10 bg-white/[0.025] p-6 sm:p-8"><TierBadge tier={tier} /><h2 className="mt-5 font-display text-3xl font-semibold text-ink">{premium ? 'Your Premium membership' : 'Your essentials, always free.'}</h2><p className="mt-3 text-sm leading-relaxed text-ink-muted">{premium ? `Subscription status: ${status ?? 'Not available'}.` : 'Find your sensitivity, convert your settings, create a crosshair and practice with the free tools.'}</p><p className="mt-5 flex items-center gap-2 text-xs text-ink-dim"><ShieldCheck className="h-4 w-4" />Your saved player data stays in your account.</p></section><section className="relative overflow-hidden rounded-3xl border border-amber-200/25 bg-gradient-to-br from-amber-200/[0.08] to-base-bg p-6 sm:p-8"><div className="flex items-center justify-between gap-3"><Crown className="h-6 w-6 text-amber-200" /><span className="rounded-full bg-amber-200/10 px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-amber-200">Coming soon</span></div><h2 className="mt-5 font-display text-3xl font-semibold text-ink">Go further with Premium.</h2><p className="mt-3 font-display text-3xl font-semibold text-amber-200">$0.99 <span className="text-sm font-normal text-ink-dim">/ month at launch</span></p><p className="mt-4 max-w-lg text-sm leading-relaxed text-ink-muted">A deeper progress dashboard, setup comparisons and personalized routines are in development.</p><ul className="mt-5 grid gap-3 sm:grid-cols-2">{['Progress insights', 'Before / after comparisons', 'Personalized routines', 'Weekly reports'].map(feature => <li key={feature} className="flex items-center gap-2 text-xs text-ink-muted"><Clock className="h-3.5 w-3.5 text-amber-200" />{feature}</li>)}</ul><Link to="/pricing" className="focus-ring mt-6 inline-flex items-center gap-2 rounded-xl bg-amber-200 px-5 py-3 text-sm font-semibold text-black hover:bg-amber-100">Explore Premium<ArrowRight className="h-4 w-4" /></Link><p className="mt-3 text-xs text-ink-dim">Payments are not available yet.</p></section></div>;
 }
