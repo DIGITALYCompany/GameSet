@@ -37,7 +37,7 @@ export function ProfileSection({ profile, email, onSave }: Props) {
     <div className="space-y-10">
       <section>
         <SectionHeader title="Public profile" description="How you appear across the platform." />
-        <div className="rounded-xl border border-white/[0.06] bg-white/[0.015] p-6">
+        <div className="rounded-2xl border border-white/[0.12] bg-[#12121b] p-5 sm:p-6">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -45,24 +45,24 @@ export function ProfileSection({ profile, email, onSave }: Props) {
             }}
             className="flex flex-col gap-4 sm:flex-row sm:items-start"
           >
-            <div className="flex-1">
+            <div className="min-w-0 flex-1">
               <Input
                 label="Display name"
                 name="username"
-                placeholder="Player1"
+                placeholder="Choose your player name"
                 maxLength={24}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 error={nameError}
               />
             </div>
-            <Button type="submit" variant="primary" disabled={!canSave} className="sm:mt-[26px]">
+            <Button type="submit" variant="primary" disabled={!canSave} className="h-[46px] sm:mt-[26px] disabled:opacity-100 disabled:border-white/10 disabled:bg-none disabled:bg-[#252532] disabled:text-[#b3b3c3] disabled:shadow-none">
               {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
             </Button>
           </form>
           <div className="mt-5 border-t border-white/[0.06] pt-5">
             <p className="text-sm font-medium text-ink">Email</p>
-            <p className="mt-1 text-sm text-ink-muted">{email}</p>
+            <p className="mt-1 break-all text-sm text-ink">{email}</p>
           </div>
           <StatusLine status={status} />
         </div>
@@ -85,7 +85,7 @@ export function ProfileSection({ profile, email, onSave }: Props) {
                   'flex aspect-square items-center justify-center rounded-xl border transition-all duration-200 ease-smooth focus-ring',
                   active
                     ? 'border-accent-purple/60 bg-accent-purple/15 text-white shadow-[0_0_0_3px_rgba(142,59,255,0.15)]'
-                    : 'border-white/[0.06] bg-white/[0.02] text-ink-muted hover:-translate-y-0.5 hover:border-white/15 hover:text-ink'
+                    : 'border-white/[0.12] bg-[#161620] text-ink-muted hover:-translate-y-0.5 hover:border-white/15 hover:text-ink'
                 )}
               >
                 <Icon className="h-5 w-5" strokeWidth={1.75} />
@@ -114,7 +114,7 @@ export function ProfileSection({ profile, email, onSave }: Props) {
                   'flex items-center justify-between rounded-xl border px-4 py-3 text-left text-sm font-medium transition-all duration-200 focus-ring',
                   active
                     ? 'border-accent-purple/50 bg-accent-purple/10 text-ink'
-                    : 'border-white/[0.06] bg-white/[0.015] text-ink-muted hover:border-white/15 hover:text-ink'
+                    : 'border-white/[0.12] bg-[#161620] text-ink-muted hover:border-white/15 hover:text-ink'
                 )}
               >
                 <span className="flex items-center gap-3">

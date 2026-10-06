@@ -21,7 +21,7 @@ import { cn } from "@/utils/cn";
 import type { GameId } from "@/types";
 
 const inputClass =
-  "mt-2 w-full rounded-lg border border-white/10 bg-black/25 px-3 py-2.5 text-sm text-ink outline-none focus:border-accent-purple-light";
+  "mt-2 w-full rounded-lg border border-white/10 bg-[#0c0c14] px-3 py-2.5 text-sm text-ink outline-none focus:border-accent-purple-light";
 export function SetupSection() {
   const { user } = useAuth();
   const {
@@ -136,9 +136,9 @@ export function SetupSection() {
               <HardDrive className="h-3.5 w-3.5" />
             )}
             {status === "loading"
-              ? "Loading your setup…"
+              ? "Loading your setupâ€¦"
               : status === "syncing"
-                ? "Syncing…"
+                ? "Syncingâ€¦"
                 : status === "synced"
                   ? "Cloud synced"
                   : status === "error"
@@ -317,18 +317,18 @@ export function SetupSection() {
           </aside>
           <form
             onSubmit={submit}
-            className="rounded-xl border border-white/10 bg-base-surface p-5 sm:p-6"
+            className="rounded-2xl border border-white/[0.12] bg-[#12121b] p-5 sm:p-6"
           >
             <fieldset disabled={!ready}>
               <div className="flex items-center justify-between gap-3">
                 <h2 className="font-display text-xl font-semibold text-ink">
                   {selected ? "Edit your loadout" : "Build your loadout"}
                 </h2>
-                <Crosshair className="h-5 w-5 text-accent-purple-light" />
+                <span className="rounded-xl border border-accent-purple/25 bg-accent-purple/10 p-2"><Crosshair aria-hidden="true" className="h-5 w-5 text-accent-purple-light" /></span>
               </div>
               <label className="mt-6 block text-xs font-medium text-ink-muted">
                 Game
-                <div className="relative">
+                <div className="relative mt-2">
                   <GameIcon
                     gameId={gameId}
                     size="sm"
@@ -340,10 +340,10 @@ export function SetupSection() {
                       setGameId(event.target.value as GameId);
                       setConfirmDelete(null);
                     }}
-                    className={`${inputClass} pl-12`}
+                    className={`${inputClass} !mt-0 pl-12`}
                   >
                     {GAMES.map((item) => (
-                      <option key={item.id} value={item.id}>
+                      <option key={item.id} value={item.id} className="bg-[#12121b] text-ink">
                         {item.name}
                       </option>
                     ))}
@@ -439,7 +439,7 @@ export function SetupSection() {
                   onChange={(event) => update(setNotes, event.target.value)}
                   maxLength={2000}
                   rows={3}
-                  placeholder="Mousepad, scoped settings, what feels right…"
+                  placeholder="Mousepad, scoped settings, what feels rightâ€¦"
                   className={`${inputClass} resize-y`}
                 />
               </label>

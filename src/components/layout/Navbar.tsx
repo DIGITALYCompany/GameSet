@@ -5,6 +5,7 @@ import { Logo } from '@/components/ui/Logo';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/utils/cn';
 import { GamesMenu } from './GamesMenu';
+import { AccountMenu } from './AccountMenu';
 
 const NAV_LINKS = [
   { label: 'Tools', to: '/tools' },
@@ -85,19 +86,7 @@ export function Navbar({ onOpenAuth }: NavbarProps) {
             <span className="relative hidden sm:inline">Premium</span>
           </Link>
           {user ? (
-            <Link
-              to="/account"
-              className={cn(
-                'inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-all duration-200 focus-ring',
-                pathname === '/account'
-                  ? 'border-white/10 bg-white/[0.08] text-ink'
-                  : 'border-transparent text-ink-muted hover:border-border hover:bg-white/[0.04] hover:text-ink'
-              )}
-              aria-current={pathname === '/account' ? 'page' : undefined}
-            >
-              <User className="h-4 w-4" />
-              <span className="hidden sm:inline">Account</span>
-            </Link>
+            <AccountMenu />
           ) : (
             <button
               type="button"

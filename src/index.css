@@ -404,3 +404,9 @@ body::after {
 .premium-nav::before { content: ''; position: absolute; inset: 0; background: linear-gradient(110deg, transparent 25%, rgba(255, 255, 255, .17) 50%, transparent 75%); transform: translateX(-120%); transition: transform .6s ease; }
 .premium-nav:hover::before { transform: translateX(120%); }
 @media (prefers-reduced-motion: reduce) { .premium-nav::before { transition: none; } }
+
+/* Account surfaces remain legible over the decorative page grid. */
+.account-dashboard .text-ink-dim { color: #aaaabc; }
+.account-dashboard .text-ink-muted { color: #c2c2d0; }
+.account-dashboard input::placeholder { color: #9999ad; opacity: 1; }
+.account-dashboard input { border-color: rgba(255, 255, 255, .14); }

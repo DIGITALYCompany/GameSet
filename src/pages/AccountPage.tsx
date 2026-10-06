@@ -148,6 +148,7 @@ export function AccountPage() {
       .maybeSingle();
     if (error || !data) return false;
     setProfile((prev) => ({ ...prev, ...allowed }));
+    window.dispatchEvent(new Event("gameset:profile-updated"));
     return true;
   };
 
@@ -207,20 +208,20 @@ export function AccountPage() {
 
   return (
     <Layout>
-      <div className="relative">
+      <div className="account-dashboard relative">
 
         <div className="relative mx-auto max-w-7xl px-4 pb-16 pt-8 sm:px-6 sm:pt-10">
-          <header className="flex flex-wrap items-center justify-between gap-5 rounded-3xl border border-white/[0.08] bg-white/[0.025] p-5 sm:p-7">
+          <header className="grid gap-5 rounded-3xl border border-white/[0.12] bg-[#12121b] p-5 shadow-xl sm:p-7 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
             <div className="flex min-w-0 items-center gap-4">
               <Avatar value={profile.avatar_emoji} size="md" />
               <div className="min-w-0">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-accent-purple-light">Player dashboard</p>
                 <div className="mt-2 flex flex-wrap items-center gap-3"><h1 className="max-w-[220px] truncate font-display text-2xl font-semibold tracking-tight text-ink sm:max-w-none sm:text-3xl">Hey, {profile.username || "Player"}.</h1>{!dataLoading && <TierBadge tier={profile.subscription_tier} />}</div>
-                <p className="mt-2 text-xs text-ink-dim">{joined ? `Member since ${joined}` : "Your personal player space"}</p>
+                <p className="mt-2 text-xs text-ink-muted">{joined ? `Member since ${joined}` : "Your personal player space"}</p>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <span className="flex items-center gap-2 text-xs text-ink-dim"><span className={cn("h-1.5 w-1.5 rounded-full", workspaceStatus === "synced" ? "bg-accent-green" : workspaceStatus === "error" ? "bg-accent-orange" : "bg-ink-dim")} />{workspaceStatus === "synced" ? "Workspace synced" : workspaceStatus === "error" ? "Workspace sync issue" : workspaceStatus === "syncing" ? "Syncing workspace?" : "Loading workspace?"}</span>
+            <div className="flex flex-wrap items-center gap-3 border-t border-white/10 pt-4 lg:border-0 lg:pt-0">
+              <span className="flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 py-2 text-xs text-ink-muted"><span className={cn("h-1.5 w-1.5 rounded-full", workspaceStatus === "synced" ? "bg-accent-green" : workspaceStatus === "error" ? "bg-accent-orange" : "bg-ink-dim")} />{workspaceStatus === "synced" ? "Workspace synced" : workspaceStatus === "error" ? "Workspace sync issue" : workspaceStatus === "syncing" ? "Syncing workspace?" : "Loading workspace?"}</span>
               <button type="button" onClick={() => switchTab("profile")} className="focus-ring rounded-xl border border-white/10 px-4 py-2.5 text-xs font-medium text-ink hover:bg-white/5">Edit profile</button>
             </div>
           </header>
@@ -260,16 +261,10 @@ export function AccountPage() {
                         className={cn(
                           "group relative flex w-full items-center gap-3 whitespace-nowrap rounded-xl px-3 py-3 text-sm font-medium transition-all duration-200 focus-ring",
                           active
-                            ? "bg-accent-purple/15 text-ink"
+                            ? "bg-accent-purple/15 text-ink shadow-[inset_0_0_0_1px_rgba(165,107,255,0.25)]"
                             : "text-ink-muted hover:bg-white/[0.03] hover:text-ink",
                         )}
                       >
-                        <span
-                          className={cn(
-                            "absolute left-0 top-1/2 hidden h-4 w-0.5 -translate-y-1/2 rounded-full bg-accent-purple transition-opacity lg:block",
-                            active ? "opacity-100" : "opacity-0",
-                          )}
-                        />
                         <Icon
                           className={cn(
                             "h-4 w-4",
