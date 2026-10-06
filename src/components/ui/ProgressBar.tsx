@@ -1,9 +1,7 @@
 import { cn } from '@/utils/cn';
 
 interface ProgressBarProps {
-  /** Current progress (1-indexed) */
   current: number;
-  /** Total steps */
   total: number;
   className?: string;
 }
@@ -14,7 +12,7 @@ export function ProgressBar({ current, total, className }: ProgressBarProps) {
   return (
     <div
       className={cn(
-        'h-1 w-full overflow-hidden rounded-full bg-base-surface-3',
+        'h-1.5 w-full overflow-hidden rounded-full bg-base-surface-3',
         className
       )}
       role="progressbar"
@@ -24,7 +22,7 @@ export function ProgressBar({ current, total, className }: ProgressBarProps) {
       aria-label={`Round ${current} of ${total}`}
     >
       <div
-        className="h-full rounded-full bg-accent-purple transition-all duration-300 ease-out"
+        className="h-full rounded-full bg-gradient-to-r from-accent-purple to-accent-magenta transition-all duration-500 ease-smooth shadow-sm shadow-accent-purple/30"
         style={{ width: `${pct}%` }}
       />
     </div>

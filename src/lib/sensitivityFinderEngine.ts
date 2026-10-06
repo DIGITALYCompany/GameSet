@@ -115,6 +115,27 @@ export class SensitivityFinderEngine {
     this.state.higher = higher;
   }
 
+  /** Both values felt identical — the sweet spot lies between them, so finish now. */
+  selectSame(): void {
+    if (this.state.phase !== 'testing') return;
+    this.state.lowBound = this.state.lower;
+    this.state.highBound = this.state.higher;
+    this.state.result = (this.state.lower + this.state.higher) / 2;
+    this.state.phase = 'result';
+  }
+
+  /** Percent gap between the two values currently on screen. */
+  get currentGapPercent(): number {
+    const mid = (this.state.lower + this.state.higher) / 2;
+    if (!(mid > 0)) return 0;
+    return ((this.state.higher - this.state.lower) / mid) * 100;
+  }
+
+  /** Final precision (± % of the starting sensitivity) after a full run of N rounds. */
+  static precisionFor(rounds: number): number {
+    return (Math.pow(2 / 3, rounds) / 2) * 100;
+  }
+
   /** Get the final result. Returns null if test is not complete. */
   getResult(): number | null {
     if (this.state.phase !== 'result') return null;
@@ -123,7 +144,7 @@ export class SensitivityFinderEngine {
 
   /** Get the full internal state (for debugging or persistence). */
   getState(): FinderState {
-    return { ...this.state };
+    return { ...this.state, history: [...this.state.history] };
   }
 
   /** Current round number (1-indexed). */

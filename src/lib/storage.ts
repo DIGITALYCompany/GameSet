@@ -46,7 +46,11 @@ export function saveTest(result: SensitivityResult): void {
 
 export function deleteTest(id: string): void {
   const tests = getTests().filter((t) => t.id !== id);
-  localStorage.setItem(KEYS.tests, JSON.stringify(tests));
+  try {
+    localStorage.setItem(KEYS.tests, JSON.stringify(tests));
+  } catch {
+    // Storage unavailable
+  }
 }
 
 export function clearTests(): void {
@@ -56,17 +60,29 @@ export function clearTests(): void {
 /* ── Settings ───────────────────────────────────────────── */
 
 export function getSettings(): AppSettings {
+  const raw = safeParse<Partial<AppSettings> | null>(localStorage.getItem(KEYS.settings), {});
+  const saved = raw && typeof raw === 'object' ? raw : {};
   return {
-    ...DEFAULT_SETTINGS,
-    ...safeParse<Partial<AppSettings>>(
-      localStorage.getItem(KEYS.settings),
-      {}
-    ),
+    theme: DEFAULT_SETTINGS.theme,
+    soundEffects: typeof saved.soundEffects === 'boolean' ? saved.soundEffects : DEFAULT_SETTINGS.soundEffects,
+    reducedMotion: typeof saved.reducedMotion === 'boolean' ? saved.reducedMotion : DEFAULT_SETTINGS.reducedMotion,
+    defaultRounds:
+      typeof saved.defaultRounds === 'number' && Number.isFinite(saved.defaultRounds)
+        ? saved.defaultRounds
+        : DEFAULT_SETTINGS.defaultRounds,
   };
 }
 
+export function applyReducedMotion(enabled: boolean): void {
+  document.documentElement.classList.toggle('reduced-motion', enabled);
+}
+
 export function saveSettings(settings: AppSettings): void {
-  localStorage.setItem(KEYS.settings, JSON.stringify(settings));
+  try {
+    localStorage.setItem(KEYS.settings, JSON.stringify(settings));
+  } catch {
+    // Storage unavailable
+  }
 }
 
 /* ── Selected game ──────────────────────────────────────── */
@@ -76,12 +92,17 @@ export function getSelectedGame(): string | null {
 }
 
 export function saveSelectedGame(gameId: string): void {
-  localStorage.setItem(KEYS.selectedGame, gameId);
+  try {
+    localStorage.setItem(KEYS.selectedGame, gameId);
+  } catch {
+    // Storage unavailable
+  }
 }
 
 /* ── Clear all ──────────────────────────────────────────── */
 
 export function clearAllData(): void {
+  localStorage.removeItem('gameset:routines');
   localStorage.removeItem(KEYS.tests);
   localStorage.removeItem(KEYS.settings);
   localStorage.removeItem(KEYS.selectedGame);

@@ -1,31 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { AppSettings } from '@/types';
-import { getSettings, saveSettings as persistSettings } from '@/lib/storage';
-
-const DEFAULTS: AppSettings = {
-  theme: 'dark',
-  soundEffects: false,
-  reducedMotion: false,
-  defaultRounds: 7,
-};
+import { applyReducedMotion, getSettings, saveSettings as persistSettings } from '@/lib/storage';
 
 export function useSettings() {
-  const [settings, setSettings] = useState<AppSettings>(() => {
-    try {
-      return getSettings();
-    } catch {
-      return DEFAULTS;
-    }
-  });
+  const [settings, setSettings] = useState<AppSettings>(getSettings);
 
-  // Apply reduced motion preference to the document
   useEffect(() => {
-    const root = document.documentElement;
-    if (settings.reducedMotion) {
-      root.classList.add('reduced-motion');
-    } else {
-      root.classList.remove('reduced-motion');
-    }
+    applyReducedMotion(settings.reducedMotion);
   }, [settings.reducedMotion]);
 
   const update = useCallback((patch: Partial<AppSettings>) => {

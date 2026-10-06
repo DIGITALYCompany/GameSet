@@ -21,8 +21,12 @@ dist-ssr
 *.sln
 *.sw?
 .env
+.env.*
+!.env.example
 
 
-supabase
+# Supabase migrations are part of the application; local CLI state is not.
+supabase/.temp/
+supabase/.branches/
 
 .bolt

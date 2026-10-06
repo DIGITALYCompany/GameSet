@@ -16,7 +16,7 @@ function GameBadge({ name }: { name: string }) {
     .join('')
     .toUpperCase();
   return (
-    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-base-surface-3 font-display text-sm font-bold text-ink-muted">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-base-surface-3 font-display text-sm font-bold text-ink-muted">
       {initials}
     </div>
   );
@@ -34,9 +34,9 @@ export function GameSelector({ selectedId, onSelect }: GameSelectorProps) {
             onClick={() => onSelect(game)}
             aria-pressed={active}
             className={cn(
-              'flex items-center gap-3 rounded-md border p-3 text-left transition-colors duration-150 focus-ring',
+              'flex items-center gap-3 rounded-lg border p-3 text-left transition-all duration-200 focus-ring',
               active
-                ? 'border-accent-purple bg-accent-purple/5'
+                ? 'border-accent-purple bg-accent-purple/5 shadow-glow-sm'
                 : 'border-border bg-base-surface hover:border-white/15 hover:bg-base-surface-2'
             )}
           >
@@ -51,7 +51,8 @@ export function GameSelector({ selectedId, onSelect }: GameSelectorProps) {
                 {game.name}
               </p>
               <p className="text-xs text-ink-dim">
-                {game.sensRange.min}–{game.sensRange.max}
+                <span className="text-ink-dim/70">Sensitivity scale: </span>
+                {game.sensDisplay}
               </p>
             </div>
           </button>

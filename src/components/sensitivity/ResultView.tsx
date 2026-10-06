@@ -1,8 +1,11 @@
 import { useState } from 'react';
-import { Save, RotateCcw, Copy, Check } from 'lucide-react';
+import { Save, RotateCcw, Copy, Check, Home } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Logo } from '@/components/ui/Logo';
 import { Button } from '@/components/ui/Button';
+import { SiteGrid } from '@/components/ui/SiteGrid';
 import { round } from '@/utils/calculations';
+import { GAMES } from '@/data/games';
 
 interface ResultViewProps {
   sensitivity: number;
@@ -30,6 +33,7 @@ export function ResultView({
   saved,
 }: ResultViewProps) {
   const [copied, setCopied] = useState(false);
+  const game = GAMES.find(item => item.name === gameName);
 
   const handleCopy = () => {
     const text = [
@@ -49,11 +53,19 @@ export function ResultView({
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-base-bg">
-      {/* Minimal focused header */}
-      <div className="border-b border-border px-4 py-4 sm:px-6">
+    <div className="relative isolate flex min-h-screen flex-col bg-base-bg">
+      <SiteGrid />
+      {/* Header */}
+      <div className="border-b border-border nav-blur px-4 py-4 sm:px-6">
         <div className="mx-auto flex max-w-3xl items-center justify-between">
           <Logo size="sm" />
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm text-ink-muted transition-all duration-200 hover:bg-base-surface-2 hover:text-ink focus-ring"
+          >
+            <Home className="h-4 w-4" />
+            Home
+          </Link>
         </div>
       </div>
 
@@ -64,10 +76,10 @@ export function ResultView({
             <p className="font-display text-sm font-semibold uppercase tracking-[0.2em] text-ink-muted">
               Your GAMESET Sensitivity
             </p>
-            <p className="mt-4 font-mono text-6xl font-bold text-ink sm:text-7xl animate-pop">
+            <p className="mt-5 font-mono text-6xl font-bold text-gradient sm:text-8xl animate-pop">
               {round(sensitivity, 2)}
             </p>
-            <p className="mt-3 text-sm text-ink-dim">
+            <p className="mt-4 text-sm text-ink-dim">
               Starting sensitivity was{' '}
               <span className="font-mono text-ink-muted">
                 {round(initialSensitivity, 2)}
@@ -89,6 +101,7 @@ export function ResultView({
           </div>
 
           {/* Actions */}
+          {game && <Link to={`/setup?${new URLSearchParams({ game: game.id, dpi: String(dpi), sensitivity: String(sensitivity) }).toString()}`} className="arena-secondary mt-6 focus-ring">Use this result in my setup</Link>}
           <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <Button
               variant="primary"
@@ -127,7 +140,7 @@ export function ResultView({
 
 function StatTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border border-border bg-base-surface p-4">
+    <div className="rounded-xl border border-border bg-base-surface p-4 shadow-card transition-all duration-300 hover:border-white/10 hover:bg-base-surface-2">
       <p className="text-xs font-medium uppercase tracking-wider text-ink-dim">
         {label}
       </p>

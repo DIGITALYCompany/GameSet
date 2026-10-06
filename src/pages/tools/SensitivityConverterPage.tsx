@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Repeat, ArrowRight } from 'lucide-react';
+import { Layout } from '@/components/layout/Layout';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { GAMES } from '@/data/games';
@@ -34,9 +36,10 @@ export function SensitivityConverterPage() {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
+    <Layout>
+      <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-14">
         <div className="mb-8">
-          <div className="inline-flex items-center gap-2 rounded-md border border-border bg-base-surface px-3 py-1.5">
+          <div className="inline-flex items-center gap-2 rounded-lg border border-border bg-base-surface px-3 py-1.5">
             <Repeat className="h-3.5 w-3.5 text-accent-purple" />
             <span className="text-xs font-medium text-ink-muted">Sensitivity Converter</span>
           </div>
@@ -87,7 +90,7 @@ export function SensitivityConverterPage() {
           <div className="flex items-center justify-center py-2 lg:pt-12">
             <button
               onClick={swap}
-              className="rounded-md border border-border bg-base-surface-2 p-3 text-ink-muted transition-colors hover:border-white/15 hover:text-ink focus-ring"
+              className="rounded-lg border border-border bg-base-surface-2 p-3 text-ink-muted transition-colors hover:border-white/15 hover:text-ink focus-ring"
               aria-label="Swap source and target games"
             >
               <ArrowRight className="h-5 w-5 lg:rotate-90" />
@@ -104,13 +107,13 @@ export function SensitivityConverterPage() {
               onSelect={setTargetGame}
             />
             <div className="mt-4 space-y-3">
-              <div className="rounded-md border border-border bg-base-surface-2 p-3">
+              <div className="rounded-lg border border-border bg-base-surface-2 p-3">
                 <p className="text-xs font-medium text-ink-dim">DPI (same)</p>
                 <p className="mt-1 font-mono text-lg font-bold text-ink">
                   {valid ? dpiNum : '—'}
                 </p>
               </div>
-              <div className="rounded-md border border-accent-purple/40 bg-accent-purple/5 p-3">
+              <div className="rounded-lg border border-accent-purple/40 bg-accent-purple/5 p-3">
                 <p className="text-xs font-medium text-accent-purple">Converted Sensitivity</p>
                 <p className="mt-1 font-mono text-lg font-bold text-ink">
                   {targetSens !== null ? round(targetSens, 4) : '—'}
@@ -121,13 +124,14 @@ export function SensitivityConverterPage() {
         </div>
 
         {/* Result summary */}
+        {targetSens !== null && Number.isFinite(targetSens) && <Link to={`/setup?${new URLSearchParams({ game: targetGame.id, dpi: String(dpiNum), sensitivity: String(targetSens) }).toString()}`} className="arena-secondary mt-6 focus-ring">Use converted sensitivity in my setup</Link>}
         <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <StatCard label="Source cm/360" value={cm360 !== null ? `${round(cm360, 1)} cm` : '—'} />
           <StatCard label="Target cm/360" value={cm360 !== null ? `${round(cm360, 1)} cm` : '—'} />
           <StatCard label="Target eDPI" value={targetEdpi !== null ? round(targetEdpi, 0).toString() : '—'} />
         </div>
 
-        <div className="mt-6 rounded-md border border-border bg-base-surface-2 p-4">
+        <div className="mt-6 rounded-xl border border-border bg-base-surface-2 p-4 shadow-card">
           <p className="text-sm leading-relaxed text-ink-muted">
             <span className="font-semibold text-ink">How it works:</span> Your
             cm/360 (centimeters per full turn) stays constant when converting.
@@ -137,6 +141,7 @@ export function SensitivityConverterPage() {
           </p>
         </div>
       </div>
+    </Layout>
   );
 }
 
@@ -157,7 +162,7 @@ function GameDropdown({
           const game = games.find((g) => g.id === e.target.value);
           if (game) onSelect(game);
         }}
-        className="w-full appearance-none rounded-md border border-border bg-base-surface-2 px-4 py-2.5 text-sm font-medium text-ink transition-colors focus:border-accent-purple focus:outline-none focus:ring-1 focus:ring-accent-purple"
+        className="w-full appearance-none rounded-lg border border-border bg-base-surface-2 px-4 py-2.5 text-sm font-medium text-ink transition-colors focus:border-accent-purple focus:outline-none focus:ring-1 focus:ring-accent-purple"
         aria-label="Select game"
       >
         {games.map((g) => (
@@ -172,7 +177,7 @@ function GameDropdown({
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md border border-border bg-base-surface p-4 text-center">
+    <div className="rounded-xl border border-border bg-base-surface p-4 text-center shadow-card">
       <p className="text-xs font-medium uppercase tracking-wider text-ink-dim">
         {label}
       </p>

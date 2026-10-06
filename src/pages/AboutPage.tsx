@@ -2,7 +2,7 @@ import { LegalPage } from '@/components/legal/LegalPage';
 
 export function AboutPage() {
   return (
-    <LegalPage title="About" lastUpdated="September 28, 2026">
+    <LegalPage title="About" lastUpdated="October 3, 2026">
       <p>
         GAMESET is a gaming tools platform built by DIGITALY Games. Our mission
         is to give FPS players practical, well-designed tools to optimize their
@@ -21,27 +21,29 @@ export function AboutPage() {
       <h2>What's Available Now</h2>
       <ul>
         <li>Sensitivity Finder — a progressive comparison process to find your ideal sensitivity</li>
+        <li>Sensitivity Converter: carry your aim feel between games, with eDPI and cm/360 included</li>
+        <li>Flick Trainer and Tracking Trainer: timed drills for the two core aim skills</li>
+        <li>Reaction Time Test: measure your raw reflexes</li>
+        <li>Mouse Polling Rate Test: check that your mouse reports as fast as it should</li>
+        <li>Crosshair Generator — design and export custom crosshairs for any game</li>
         <li>Test history — all results saved locally on your device</li>
+        <li>Cloud sync — create an account to sync results across devices</li>
         <li>Game selection — support for 8 popular FPS titles</li>
       </ul>
 
       <h2>What's Coming</h2>
       <ul>
-        <li>Aim Trainer</li>
-        <li>Sensitivity Converter</li>
-        <li>eDPI Calculator</li>
-        <li>cm/360 Calculator</li>
-        <li>FPS Benchmark</li>
-        <li>Input Latency Test</li>
-        <li>Crosshair Generator</li>
-        <li>Player Profile and Statistics</li>
+        <li>More aim drills</li>
+        <li>More supported games</li>
+        <li>Online payments for Pro and Elite plans</li>
       </ul>
 
       <h2>Privacy First</h2>
       <p>
-        GAMESET stores your data locally on your device. We do not require an
-        account, and we do not collect personal information for the core
-        features. You can read our full{' '}
+        Every core tool works without an account, and your test history is
+        stored locally on your device. Creating an account is optional and
+        only used to sync your results and followed games across devices. You
+        can read our full{' '}
         <a href="/privacy">Privacy Policy</a> for details.
       </p>
 

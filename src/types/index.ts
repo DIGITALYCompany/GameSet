@@ -1,3 +1,81 @@
+export type SubscriptionTier = 'free' | 'pro' | 'elite';
+
+export interface SubscriptionPlan {
+  tier: SubscriptionTier;
+  name: string;
+  price: number;
+  period: string;
+  tagline: string;
+  features: string[];
+  highlighted?: boolean;
+  badge?: string;
+}
+
+export const SUBSCRIPTION_PLANS: SubscriptionPlan[] = [
+  {
+    tier: 'free',
+    name: 'Free',
+    price: 0,
+    period: 'forever',
+    tagline: 'Everything you need to find your sensitivity',
+    features: [
+      'Sensitivity Finder with 7-round tests',
+      'Cross-game sensitivity converter',
+      'eDPI & cm/360 calculators',
+      'Crosshair generator',
+      'Local test history (device storage)',
+      'Follow up to 3 games',
+    ],
+  },
+  {
+    tier: 'pro',
+    name: 'Pro',
+    price: 0.99,
+    period: 'month',
+    tagline: 'For competitive players who want more precision',
+    highlighted: true,
+    badge: 'Most Popular',
+    features: [
+      'Everything in Free',
+      '10-round precision sensitivity tests',
+      'Unlimited cloud-synced test history',
+      'Aim Trainer & Reaction Time analytics',
+      'Follow unlimited games',
+      'Pro preset database with copy-to-clipboard',
+      'Advanced cm/360 matching across all games',
+      'Priority support',
+    ],
+  },
+  {
+    tier: 'elite',
+    name: 'Elite',
+    price: 4.99,
+    period: 'month',
+    tagline: 'The complete competitive toolkit',
+    badge: 'Best Value',
+    features: [
+      'Everything in Pro',
+      'Unlimited sensitivity test rounds (up to 20)',
+      'Aim training progress tracking & trends',
+      'Personal sensitivity profile across all games',
+      'Crosshair sharing & community presets',
+      'Exclusive Elite-only tools (early access)',
+      'Ad-free experience',
+      'Direct feature request channel',
+    ],
+  },
+];
+
+export interface AimTrainingScore {
+  id: string;
+  game_mode: 'flick' | 'tracking' | 'reaction';
+  score: number;
+  accuracy: number;
+  avg_reaction_ms: number | null;
+  duration_seconds: number;
+  created_at: string;
+}
+
 export type GameId =
   | 'valorant'
   | 'cs2'
@@ -8,25 +86,32 @@ export type GameId =
   | 'fortnite'
   | 'thefinals';
 
+export interface ProPreset {
+  player: string;
+  team: string;
+  dpi: number;
+  sensitivity: number;
+  edpi: number;
+}
+
 export interface GameConfig {
   id: GameId;
   name: string;
   slug: string;
-  /** Sensitivity range that covers the vast majority of players */
-  sensRange: { min: number; max: number };
+  genre: string;
+  color: string;
+  tagline: string;
+  description: string;
+  sensScale: { min: number; max: number };
+  sensDisplay: string;
+  sensUnit?: string;
+  recommendedRange: { min: number; max: number };
   defaultSens: number;
-  /** Whether the game natively supports a separate DPI setting */
   dpiSupport: boolean;
-  /**
-   * cm/360 conversion factor.
-   * cm/360 = (360 / (sens * yaw * dpi)) * 2.54
-   * Where `yaw` is the game-specific yaw base.
-   */
   yaw: number;
-  /** Whether FOV affects the calculation */
   hasFov: boolean;
-  /** Optional FOV default */
   defaultFov?: number;
+  proPresets: ProPreset[];
 }
 
 export type ToolStatus = 'available' | 'coming_soon';
@@ -34,9 +119,7 @@ export type ToolStatus = 'available' | 'coming_soon';
 export type ToolCategory =
   | 'sensitivity'
   | 'aim'
-  | 'conversion'
-  | 'performance'
-  | 'profile';
+  | 'performance';
 
 export interface Tool {
   id: string;

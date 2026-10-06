@@ -1,473 +1,318 @@
 import type { GameId } from '@/types';
-
-/**
- * Game-specific crosshair configuration.
- *
- * Each game has its own crosshair parameter names, color systems,
- * and export format. This keeps game-specific logic out of the UI
- * components and makes adding new games straightforward.
- */
+import {
+  cs2ConsoleCommands,
+  cs2ShareCode,
+  valorantProfileCode,
+  type CrosshairShape,
+} from '@/lib/crosshairCodes';
 
 export interface CrosshairColor {
   id: string;
   label: string;
-  /** The hex color used for the SVG preview */
   hex: string;
-  /** The value used in the game's export string (may differ from hex) */
-  exportValue: string;
+  gameIndex?: number;
 }
 
-export interface CrosshairParamConfig {
-  /** Parameter key in CrosshairSettings */
-  key: keyof CrosshairSettingsValues;
-  /** Display label for this game */
-  label: string;
-  min: number;
-  max: number;
-  /** Whether this parameter is available in this game */
-  available: boolean;
-}
-
-export interface CrosshairSettingsValues {
+export interface CrosshairSettings {
   gap: number;
   length: number;
   thickness: number;
   dotSize: number;
   outlineThickness: number;
-}
-
-export interface GameCrosshairConfig {
-  gameId: GameId;
-  /** Games that have a native crosshair customization system */
-  supported: boolean;
-  /** Parameter mapping for this game's crosshair settings */
-  params: CrosshairParamConfig[];
-  /** Available colors for this game's crosshair */
-  colors: CrosshairColor[];
-  /** Whether the game supports outline */
-  hasOutline: boolean;
-  /** Whether the game supports center dot */
-  hasDot: boolean;
-  /** Whether the game supports T-shape (no top line) */
-  hasTShape: boolean;
-  /** Default settings for this game */
-  defaults: CrosshairSettingsValues & {
-    colorId: string;
-    outline: boolean;
-    dot: boolean;
-    tShape: boolean;
-  };
-  /** Named presets tailored to this game */
-  presets: { name: string; settings: CrosshairSettingsValues & {
-    colorId: string;
-    outline: boolean;
-    dot: boolean;
-    tShape: boolean;
-  } }[];
-  /** Generate the game-specific export string */
-  exportFormat: (settings: ExportSettings) => string;
-  /** Instructions for applying the crosshair in-game */
-  applyInstructions: string;
-}
-
-export interface ExportSettings {
-  gap: number;
-  length: number;
-  thickness: number;
   colorId: string;
-  colorHex: string;
-  colorExport: string;
+  customHex: string;
   outline: boolean;
-  outlineThickness: number;
   dot: boolean;
-  dotSize: number;
   tShape: boolean;
 }
 
-const SHARED_COLORS: CrosshairColor[] = [
-  { id: 'green', label: 'Green', hex: '#00ff00', exportValue: '0' },
-  { id: 'yellow', label: 'Yellow', hex: '#ffff00', exportValue: '1' },
-  { id: 'cyan', label: 'Cyan', hex: '#00ffff', exportValue: '2' },
-  { id: 'white', label: 'White', hex: '#ffffff', exportValue: '5' },
-  { id: 'red', label: 'Red', hex: '#ff0000', exportValue: '4' },
-  { id: 'orange', label: 'Orange', hex: '#ff9148', exportValue: '3' },
-];
+type NumericKey = 'gap' | 'length' | 'thickness' | 'dotSize' | 'outlineThickness';
 
-const RAINBOW_COLORS: CrosshairColor[] = [
-  { id: 'white', label: 'White', hex: '#ffffff', exportValue: '0' },
-  { id: 'green', label: 'Green', hex: '#00ff00', exportValue: '1' },
-  { id: 'yellow', label: 'Yellow', hex: '#ffff00', exportValue: '2' },
-  { id: 'cyan', label: 'Cyan', hex: '#00ffff', exportValue: '3' },
-  { id: 'pink', label: 'Pink', hex: '#ff00ff', exportValue: '4' },
-  { id: 'red', label: 'Red', hex: '#ff0000', exportValue: '5' },
-];
-
-function hexToRgb(hex: string): { r: number; g: number; b: number } {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  return { r, g, b };
+export interface CrosshairRange {
+  label: string;
+  min: number;
+  max: number;
+  step: number;
 }
+
+export interface CrosshairExport {
+  id: string;
+  label: string;
+  kind: 'code' | 'console' | 'manual';
+  generate: (s: CrosshairShape, color: CrosshairColor | null) => string;
+  steps: string[];
+}
+
+export type ImportSupport = 'code' | 'manual' | 'limited';
+
+export interface GameCrosshairConfig {
+  gameId: GameId;
+  support: ImportSupport;
+  lines: Partial<Record<'gap' | 'length' | 'thickness', CrosshairRange>>;
+  outline?: CrosshairRange | 'toggle';
+  dot?: CrosshairRange | 'toggle';
+  tShape: boolean;
+  colors: CrosshairColor[];
+  customColor: boolean;
+  toPixels: (s: CrosshairSettings) => Pick<CrosshairShape, NumericKey>;
+  defaults: CrosshairSettings;
+  presets: { name: string; settings: Partial<CrosshairSettings> }[];
+  exports: CrosshairExport[];
+  note?: string;
+}
+
+const base: CrosshairSettings = {
+  gap: 2,
+  length: 6,
+  thickness: 2,
+  dotSize: 2,
+  outlineThickness: 1,
+  colorId: 'green',
+  customHex: '#00ff88',
+  outline: true,
+  dot: false,
+  tShape: false,
+};
+
+const settings = (patch: Partial<CrosshairSettings>): CrosshairSettings => ({ ...base, ...patch });
+const identity = (s: CrosshairSettings) => ({
+  gap: s.gap,
+  length: s.length,
+  thickness: s.thickness,
+  dotSize: s.dotSize,
+  outlineThickness: s.outlineThickness,
+});
+
+const VALORANT_COLORS: CrosshairColor[] = [
+  { id: 'white', label: 'White', hex: '#ffffff', gameIndex: 0 },
+  { id: 'green', label: 'Green', hex: '#00ff00', gameIndex: 1 },
+  { id: 'yellow-green', label: 'Yellow Green', hex: '#7fff00', gameIndex: 2 },
+  { id: 'green-yellow', label: 'Green Yellow', hex: '#dfff00', gameIndex: 3 },
+  { id: 'yellow', label: 'Yellow', hex: '#ffff00', gameIndex: 4 },
+  { id: 'cyan', label: 'Cyan', hex: '#00ffff', gameIndex: 5 },
+  { id: 'pink', label: 'Pink', hex: '#ff00ff', gameIndex: 6 },
+  { id: 'red', label: 'Red', hex: '#ff0000', gameIndex: 7 },
+];
+
+const SWATCHES: CrosshairColor[] = [
+  { id: 'green', label: 'Green', hex: '#00ff00' },
+  { id: 'cyan', label: 'Cyan', hex: '#00ffff' },
+  { id: 'yellow', label: 'Yellow', hex: '#ffff00' },
+  { id: 'white', label: 'White', hex: '#ffffff' },
+  { id: 'pink', label: 'Pink', hex: '#ff00ff' },
+  { id: 'red', label: 'Red', hex: '#ff0000' },
+];
+
+function manualExport(title: string, menuPath: string, rows: (s: CrosshairShape) => string[]): CrosshairExport {
+  return {
+    id: 'manual',
+    label: 'Menu values',
+    kind: 'manual',
+    generate: (s) => [`${title} — ${menuPath}`, '', ...rows(s)].join('\n'),
+    steps: [`Open ${menuPath}.`, 'Set each value exactly as listed.', 'Save your settings.'],
+  };
+}
+
+const onOff = (v: boolean) => (v ? 'On' : 'Off');
+
+const limited = (gameId: GameId, note: string, menuPath: string, title: string): GameCrosshairConfig => ({
+  gameId,
+  support: 'limited',
+  lines: {},
+  tShape: false,
+  colors: SWATCHES,
+  customColor: false,
+  toPixels: () => ({ gap: 3, length: 5, thickness: 2, dotSize: 0, outlineThickness: 0 }),
+  defaults: settings({ outline: false }),
+  presets: [],
+  exports: [manualExport(title, menuPath, (s) => [`Color: closest to ${s.hex.toUpperCase()}`])],
+  note,
+});
 
 export const GAME_CROSSHAIR_CONFIGS: Record<GameId, GameCrosshairConfig> = {
   valorant: {
     gameId: 'valorant',
-    supported: true,
-    hasOutline: true,
-    hasDot: true,
-    hasTShape: true,
-    defaults: {
-      gap: 2,
-      length: 6,
-      thickness: 2,
-      dotSize: 2,
-      outlineThickness: 1,
-      colorId: 'green',
-      outline: true,
-      dot: true,
-      tShape: false,
+    support: 'code',
+    lines: {
+      gap: { label: 'Inner Line Offset', min: 0, max: 20, step: 1 },
+      length: { label: 'Inner Line Length', min: 0, max: 20, step: 1 },
+      thickness: { label: 'Inner Line Thickness', min: 0, max: 10, step: 1 },
     },
-    params: [
-      { key: 'gap', label: 'Inner Line Offset', min: 0, max: 20, available: true },
-      { key: 'length', label: 'Inner Line Length', min: 0, max: 20, available: true },
-      { key: 'thickness', label: 'Inner Line Thickness', min: 1, max: 10, available: true },
-      { key: 'outlineThickness', label: 'Outline Thickness', min: 0, max: 6, available: true },
-      { key: 'dotSize', label: 'Center Dot Size', min: 0, max: 10, available: true },
-    ],
-    colors: SHARED_COLORS,
+    outline: { label: 'Outline Thickness', min: 1, max: 6, step: 1 },
+    dot: { label: 'Center Dot Thickness', min: 1, max: 6, step: 1 },
+    tShape: false,
+    colors: VALORANT_COLORS,
+    customColor: true,
+    toPixels: identity,
+    defaults: settings({ gap: 3, length: 4, thickness: 2, colorId: 'cyan' }),
     presets: [
-      { name: 'Default', settings: { gap: 2, length: 6, thickness: 2, dotSize: 2, outlineThickness: 1, colorId: 'green', outline: true, dot: true, tShape: false } },
-      { name: 'Dot Only', settings: { gap: 0, length: 0, thickness: 0, dotSize: 4, outlineThickness: 0, colorId: 'green', outline: false, dot: true, tShape: false } },
-      { name: 'Cross', settings: { gap: 4, length: 10, thickness: 2, dotSize: 0, outlineThickness: 1, colorId: 'cyan', outline: true, dot: false, tShape: false } },
-      { name: 'Minimal', settings: { gap: 1, length: 3, thickness: 1, dotSize: 0, outlineThickness: 1, colorId: 'white', outline: true, dot: false, tShape: false } },
+      { name: 'Pro Small', settings: { gap: 2, length: 4, thickness: 2, outline: false, dot: false, colorId: 'cyan' } },
+      { name: 'Dot', settings: { length: 0, thickness: 0, dot: true, dotSize: 3, outline: true, outlineThickness: 1, colorId: 'white' } },
+      { name: 'Classic', settings: { gap: 3, length: 6, thickness: 2, outline: true, outlineThickness: 1, dot: false, colorId: 'green' } },
+      { name: 'Plus', settings: { gap: 0, length: 3, thickness: 2, outline: true, outlineThickness: 1, dot: false, colorId: 'yellow' } },
     ],
-    exportFormat: (s) => {
-      const lines = [
-        'GAMESET Crosshair — Valorant',
-        '',
-        'Settings → Crosshair:',
-        `Color: ${s.colorExport} (${s.colorHex})`,
-        `Outlines: ${s.outline ? 'On' : 'Off'}`,
-        s.outline ? `Outline Opacity: 1 · Outline Thickness: ${s.outlineThickness}` : '',
-        `Center Dot: ${s.dot ? 'On' : 'Off'}`,
-        s.dot ? `Center Dot Size: ${s.dotSize}` : '',
-        `Inner Line Offset: ${s.gap}`,
-        `Inner Line Length: ${s.length}`,
-        `Inner Line Thickness: ${s.thickness}`,
-        `Inner Line Opacity: 1`,
-        s.tShape ? 'Top Line: Off (T-Shape)' : 'Top Line: On',
-      ].filter(Boolean);
-      return lines.join('\n');
-    },
-    applyInstructions: 'Open Settings → Crosshair in Valorant and match these values manually.',
+    exports: [
+      {
+        id: 'profile',
+        label: 'Profile code',
+        kind: 'code',
+        generate: (s, color) => valorantProfileCode(s, color?.gameIndex ?? null),
+        steps: [
+          'Open Settings, then the Crosshair tab.',
+          'Click the import icon next to the Crosshair Profile dropdown.',
+          'Paste the code and confirm.',
+        ],
+      },
+    ],
   },
 
   cs2: {
     gameId: 'cs2',
-    supported: true,
-    hasOutline: true,
-    hasDot: false,
-    hasTShape: false,
-    defaults: {
-      gap: 5,
-      length: 10,
-      thickness: 2,
-      dotSize: 0,
-      outlineThickness: 1,
-      colorId: 'green',
-      outline: true,
-      dot: false,
-      tShape: false,
+    support: 'code',
+    lines: {
+      gap: { label: 'Gap', min: -5, max: 5, step: 0.5 },
+      length: { label: 'Length', min: 0, max: 10, step: 0.5 },
+      thickness: { label: 'Thickness', min: 0, max: 5, step: 0.5 },
     },
-    params: [
-      { key: 'gap', label: 'Gap', min: -5, max: 20, available: true },
-      { key: 'length', label: 'Length', min: 0, max: 30, available: true },
-      { key: 'thickness', label: 'Thickness', min: 0, max: 10, available: true },
-      { key: 'outlineThickness', label: 'Outline', min: 0, max: 3, available: true },
-    ],
-    colors: SHARED_COLORS,
+    outline: { label: 'Outline Thickness', min: 0, max: 3, step: 0.5 },
+    dot: 'toggle',
+    tShape: true,
+    colors: SWATCHES,
+    customColor: true,
+    toPixels: (s) => ({
+      gap: Math.max(-s.thickness, s.gap + 4),
+      length: s.length * 2,
+      thickness: Math.max(1, s.thickness * 2),
+      dotSize: Math.max(1, s.thickness * 2),
+      outlineThickness: s.outlineThickness,
+    }),
+    defaults: settings({ gap: -2, length: 2, thickness: 1, outlineThickness: 1, colorId: 'green' }),
     presets: [
-      { name: 'Default', settings: { gap: 5, length: 10, thickness: 2, dotSize: 0, outlineThickness: 1, colorId: 'green', outline: true, dot: false, tShape: false } },
-      { name: 'Static', settings: { gap: -2, length: 8, thickness: 1, dotSize: 0, outlineThickness: 1, colorId: 'cyan', outline: true, dot: false, tShape: false } },
-      { name: 'Long', settings: { gap: 3, length: 20, thickness: 2, dotSize: 0, outlineThickness: 1, colorId: 'green', outline: true, dot: false, tShape: false } },
-      { name: 'Tight', settings: { gap: 0, length: 5, thickness: 1, dotSize: 0, outlineThickness: 0, colorId: 'white', outline: false, dot: false, tShape: false } },
+      { name: 'Pro Tiny', settings: { gap: -3, length: 1.5, thickness: 0.5, outline: true, outlineThickness: 1, dot: false, colorId: 'green' } },
+      { name: 'Classic', settings: { gap: -1, length: 3, thickness: 1, outline: true, outlineThickness: 1, dot: false, colorId: 'cyan' } },
+      { name: 'Dot', settings: { gap: 0, length: 0, thickness: 1, outline: true, outlineThickness: 1, dot: true, colorId: 'white' } },
+      { name: 'T-Shape', settings: { gap: -2, length: 2.5, thickness: 1, outline: true, outlineThickness: 1, tShape: true, colorId: 'yellow' } },
     ],
-    exportFormat: (s) => {
-      const { r, g, b } = hexToRgb(s.colorHex);
-      const lines = [
-        'GAMESET Crosshair — CS2',
-        '',
-        'Settings → Game → Crosshair:',
-        `Crosshair Code: cl_crosshairgap ${s.gap}; cl_crosshairsize ${s.length}; cl_crosshairthickness ${s.thickness}`,
-        `Color: cl_crosshaircolor 5; cl_crosshaircolor_r ${r}; cl_crosshaircolor_g ${g}; cl_crosshaircolor_b ${b}`,
-        `Outline: cl_crosshair_drawoutline ${s.outline ? '1' : '0'}; cl_crosshair_outlinethickness ${s.outlineThickness}`,
-        'Style: cl_crosshairstyle 4',
-      ];
-      return lines.join('\n');
-    },
-    applyInstructions: 'Open console in CS2 and paste the crosshair commands above.',
-  },
-
-  apex: {
-    gameId: 'apex',
-    supported: true,
-    hasOutline: false,
-    hasDot: false,
-    hasTShape: false,
-    defaults: {
-      gap: 4,
-      length: 8,
-      thickness: 2,
-      dotSize: 0,
-      outlineThickness: 0,
-      colorId: 'green',
-      outline: false,
-      dot: false,
-      tShape: false,
-    },
-    params: [
-      { key: 'gap', label: 'Gap', min: 0, max: 20, available: true },
-      { key: 'length', label: 'Length', min: 0, max: 30, available: true },
-      { key: 'thickness', label: 'Thickness', min: 1, max: 10, available: true },
+    exports: [
+      {
+        id: 'share',
+        label: 'Share code',
+        kind: 'code',
+        generate: (s) => cs2ShareCode(s),
+        steps: [
+          'Open Settings, then Game, then Crosshair.',
+          'Click "Share or Import", then Import.',
+          'Paste the code and press Import.',
+        ],
+      },
+      {
+        id: 'console',
+        label: 'Console',
+        kind: 'console',
+        generate: (s) => cs2ConsoleCommands(s),
+        steps: [
+          'Enable the developer console in Settings, then Game.',
+          'Press the ~ key to open the console.',
+          'Paste the whole line and press Enter.',
+        ],
+      },
     ],
-    colors: SHARED_COLORS,
-    presets: [
-      { name: 'Default', settings: { gap: 4, length: 8, thickness: 2, dotSize: 0, outlineThickness: 0, colorId: 'green', outline: false, dot: false, tShape: false } },
-      { name: 'Dot', settings: { gap: 0, length: 0, thickness: 3, dotSize: 0, outlineThickness: 0, colorId: 'red', outline: false, dot: false, tShape: false } },
-      { name: 'Long', settings: { gap: 2, length: 15, thickness: 2, dotSize: 0, outlineThickness: 0, colorId: 'cyan', outline: false, dot: false, tShape: false } },
-    ],
-    exportFormat: (s) => {
-      const lines = [
-        'GAMESET Crosshair — Apex Legends',
-        '',
-        'Settings → Gameplay → Reticle:',
-        `Color: ${s.colorId} (${s.colorHex})`,
-        `Gap: ${s.gap}`,
-        `Length: ${s.length}`,
-        `Thickness: ${s.thickness}`,
-        'Type: 2 (Cross)',
-      ];
-      return lines.join('\n');
-    },
-    applyInstructions: 'Open Settings → Gameplay → Reticle in Apex Legends and match these values.',
-  },
-
-  cod: {
-    gameId: 'cod',
-    supported: true,
-    hasOutline: false,
-    hasDot: true,
-    hasTShape: false,
-    defaults: {
-      gap: 4,
-      length: 8,
-      thickness: 2,
-      dotSize: 2,
-      outlineThickness: 0,
-      colorId: 'green',
-      outline: false,
-      dot: true,
-      tShape: false,
-    },
-    params: [
-      { key: 'gap', label: 'Center Gap', min: 0, max: 20, available: true },
-      { key: 'length', label: 'Line Length', min: 0, max: 30, available: true },
-      { key: 'thickness', label: 'Thickness', min: 1, max: 10, available: true },
-      { key: 'dotSize', label: 'Center Dot', min: 0, max: 10, available: true },
-    ],
-    colors: SHARED_COLORS,
-    presets: [
-      { name: 'Default', settings: { gap: 4, length: 8, thickness: 2, dotSize: 2, outlineThickness: 0, colorId: 'green', outline: false, dot: true, tShape: false } },
-      { name: 'Dot', settings: { gap: 0, length: 0, thickness: 0, dotSize: 3, outlineThickness: 0, colorId: 'red', outline: false, dot: true, tShape: false } },
-      { name: 'Cross', settings: { gap: 5, length: 12, thickness: 2, dotSize: 0, outlineThickness: 0, colorId: 'cyan', outline: false, dot: false, tShape: false } },
-    ],
-    exportFormat: (s) => {
-      const lines = [
-        'GAMESET Crosshair — Call of Duty',
-        '',
-        'Settings → Interface → Reticle:',
-        `Color: ${s.colorId} (${s.colorHex})`,
-        `Center Gap: ${s.gap}`,
-        `Line Length: ${s.length}`,
-        `Thickness: ${s.thickness}`,
-        `Center Dot: ${s.dot ? 'On' : 'Off'}`,
-        s.dot ? `Dot Size: ${s.dotSize}` : '',
-        'Style: 6 (Custom)',
-      ].filter(Boolean);
-      return lines.join('\n');
-    },
-    applyInstructions: 'Open Settings → Interface → Reticle in Call of Duty and match these values.',
-  },
-
-  r6: {
-    gameId: 'r6',
-    supported: false,
-    hasOutline: false,
-    hasDot: false,
-    hasTShape: false,
-    defaults: {
-      gap: 4,
-      length: 8,
-      thickness: 2,
-      dotSize: 0,
-      outlineThickness: 0,
-      colorId: 'green',
-      outline: false,
-      dot: false,
-      tShape: false,
-    },
-    params: [
-      { key: 'gap', label: 'Gap', min: 0, max: 20, available: false },
-    ],
-    colors: SHARED_COLORS,
-    presets: [],
-    exportFormat: (s) => {
-      const lines = [
-        'GAMESET Crosshair — Rainbow Six Siege',
-        '',
-        'Note: R6 Siege uses a limited set of preset reticles.',
-        'The closest match to your design:',
-        `Color: ${s.colorId} (${s.colorHex})`,
-        'Choose the "Cross" or "Dot" reticle in-game.',
-      ];
-      return lines.join('\n');
-    },
-    applyInstructions: 'Open Settings → Gameplay → Reticle in Rainbow Six Siege and choose the closest preset reticle.',
   },
 
   overwatch2: {
     gameId: 'overwatch2',
-    supported: true,
-    hasOutline: false,
-    hasDot: true,
-    hasTShape: false,
-    defaults: {
-      gap: 3,
-      length: 7,
-      thickness: 2,
-      dotSize: 2,
-      outlineThickness: 0,
-      colorId: 'green',
-      outline: false,
-      dot: true,
-      tShape: false,
+    support: 'manual',
+    lines: {
+      gap: { label: 'Center Gap', min: 0, max: 50, step: 1 },
+      length: { label: 'Crosshair Length', min: 0, max: 50, step: 1 },
+      thickness: { label: 'Thickness', min: 1, max: 15, step: 1 },
     },
-    params: [
-      { key: 'gap', label: 'Gap', min: 0, max: 20, available: true },
-      { key: 'length', label: 'Length', min: 0, max: 30, available: true },
-      { key: 'thickness', label: 'Thickness', min: 1, max: 10, available: true },
-      { key: 'dotSize', label: 'Dot Size', min: 0, max: 10, available: true },
-    ],
-    colors: RAINBOW_COLORS,
+    outline: 'toggle',
+    dot: { label: 'Dot Size', min: 1, max: 30, step: 1 },
+    tShape: false,
+    colors: SWATCHES,
+    customColor: true,
+    toPixels: (s) => ({ ...identity(s), outlineThickness: 1 }),
+    defaults: settings({ gap: 4, length: 6, thickness: 2, outline: true, dot: false, colorId: 'green' }),
     presets: [
-      { name: 'Default', settings: { gap: 3, length: 7, thickness: 2, dotSize: 2, outlineThickness: 0, colorId: 'green', outline: false, dot: true, tShape: false } },
-      { name: 'Dot', settings: { gap: 0, length: 0, thickness: 0, dotSize: 4, outlineThickness: 0, colorId: 'pink', outline: false, dot: true, tShape: false } },
-      { name: 'Circle', settings: { gap: 5, length: 5, thickness: 2, dotSize: 0, outlineThickness: 0, colorId: 'yellow', outline: false, dot: false, tShape: false } },
+      { name: 'Hitscan', settings: { gap: 3, length: 5, thickness: 2, dot: true, dotSize: 2, colorId: 'green' } },
+      { name: 'Dot', settings: { length: 0, dot: true, dotSize: 4, colorId: 'pink' } },
+      { name: 'Wide', settings: { gap: 8, length: 8, thickness: 2, dot: false, colorId: 'cyan' } },
     ],
-    exportFormat: (s) => {
-      const lines = [
-        'GAMESET Crosshair — Overwatch 2',
-        '',
-        'Settings → Controls → Reticle:',
-        `Type: ${s.length === 0 ? 'Dot' : 'Cross'}`,
-        `Color: ${s.colorId} (${s.colorHex})`,
-        `Gap: ${s.gap}`,
-        `Length: ${s.length}`,
-        `Thickness: ${s.thickness}`,
-        `Dot Size: ${s.dot ? s.dotSize : 0}`,
+    exports: [
+      manualExport('Overwatch 2', 'Options → Controls → General → Reticle → Advanced', (s) => [
+        `Type: ${s.length === 0 ? 'Dot' : 'Crosshairs'}`,
         'Show Accuracy: Off',
-      ];
-      return lines.join('\n');
-    },
-    applyInstructions: 'Open Settings → Controls → Reticle in Overwatch 2 and match these values.',
-  },
-
-  fortnite: {
-    gameId: 'fortnite',
-    supported: false,
-    hasOutline: false,
-    hasDot: false,
-    hasTShape: false,
-    defaults: {
-      gap: 4,
-      length: 8,
-      thickness: 2,
-      dotSize: 0,
-      outlineThickness: 0,
-      colorId: 'white',
-      outline: false,
-      dot: false,
-      tShape: false,
-    },
-    params: [
-      { key: 'gap', label: 'Gap', min: 0, max: 20, available: false },
+        `Color: ${s.hex.toUpperCase()}`,
+        `Thickness: ${s.thickness}`,
+        `Crosshair Length: ${s.length}`,
+        `Center Gap: ${s.gap}`,
+        'Opacity: 100%',
+        `Outline Opacity: ${s.outline ? '100%' : '0%'}`,
+        `Dot Size: ${s.dot ? s.dotSize : 0}`,
+        `Dot Opacity: ${s.dot ? '100%' : '0%'}`,
+        'Scale With Resolution: On',
+      ]),
     ],
-    colors: SHARED_COLORS,
-    presets: [],
-    exportFormat: (s: ExportSettings) => {
-      const lines = [
-        'GAMESET Crosshair — Fortnite',
-        '',
-        'Note: Fortnite does not support custom crosshairs.',
-        'Your settings can be used as a reference for aim practice.',
-        `Color: ${s.colorId} (${s.colorHex})`,
-      ];
-      return lines.join('\n');
-    },
-    applyInstructions: 'Fortnite does not support custom crosshairs natively. Use these settings as a reference for aim trainers.',
   },
 
   thefinals: {
     gameId: 'thefinals',
-    supported: true,
-    hasOutline: false,
-    hasDot: true,
-    hasTShape: false,
-    defaults: {
-      gap: 3,
-      length: 6,
-      thickness: 2,
-      dotSize: 2,
-      outlineThickness: 0,
-      colorId: 'white',
-      outline: false,
-      dot: true,
-      tShape: false,
+    support: 'manual',
+    lines: {
+      gap: { label: 'Gap', min: 0, max: 20, step: 1 },
+      length: { label: 'Length', min: 0, max: 30, step: 1 },
+      thickness: { label: 'Thickness', min: 1, max: 10, step: 1 },
     },
-    params: [
-      { key: 'gap', label: 'Gap', min: 0, max: 20, available: true },
-      { key: 'length', label: 'Length', min: 0, max: 30, available: true },
-      { key: 'thickness', label: 'Thickness', min: 1, max: 10, available: true },
-      { key: 'dotSize', label: 'Dot Size', min: 0, max: 10, available: true },
-    ],
-    colors: SHARED_COLORS,
+    outline: 'toggle',
+    dot: { label: 'Dot Size', min: 1, max: 10, step: 1 },
+    tShape: false,
+    colors: SWATCHES,
+    customColor: true,
+    toPixels: (s) => ({ ...identity(s), outlineThickness: 1 }),
+    defaults: settings({ gap: 3, length: 6, thickness: 2, outline: true, dot: true, colorId: 'white' }),
     presets: [
-      { name: 'Default', settings: { gap: 3, length: 6, thickness: 2, dotSize: 2, outlineThickness: 0, colorId: 'white', outline: false, dot: true, tShape: false } },
-      { name: 'Dot', settings: { gap: 0, length: 0, thickness: 0, dotSize: 3, outlineThickness: 0, colorId: 'red', outline: false, dot: true, tShape: false } },
-      { name: 'Cross', settings: { gap: 4, length: 10, thickness: 2, dotSize: 0, outlineThickness: 0, colorId: 'green', outline: false, dot: false, tShape: false } },
+      { name: 'Default', settings: { gap: 3, length: 6, thickness: 2, dot: true, dotSize: 2, colorId: 'white' } },
+      { name: 'Dot', settings: { length: 0, dot: true, dotSize: 3, colorId: 'red' } },
+      { name: 'Cross', settings: { gap: 4, length: 10, thickness: 2, dot: false, colorId: 'green' } },
     ],
-    exportFormat: (s) => {
-      const lines = [
-        'GAMESET Crosshair — The Finals',
-        '',
-        'Settings → Gameplay → Crosshair:',
-        `Color: ${s.colorId} (${s.colorHex})`,
+    exports: [
+      manualExport('The Finals', 'Settings → Crosshair', (s) => [
+        `Color: ${s.hex.toUpperCase()}`,
         `Gap: ${s.gap}`,
         `Length: ${s.length}`,
         `Thickness: ${s.thickness}`,
-        `Center Dot: ${s.dot ? 'On' : 'Off'}`,
-        s.dot ? `Dot Size: ${s.dotSize}` : '',
-      ].filter(Boolean);
-      return lines.join('\n');
-    },
-    applyInstructions: 'Open Settings → Gameplay → Crosshair in The Finals and match these values.',
+        `Outline: ${onOff(s.outline)}`,
+        `Center Dot: ${onOff(s.dot)}${s.dot ? ` (size ${s.dotSize})` : ''}`,
+      ]),
+    ],
   },
-};
 
-/** Games that have a native custom crosshair system */
-export const CROSSHAIR_SUPPORTED_GAMES = (Object.entries(GAME_CROSSHAIR_CONFIGS)
-  .filter(([, cfg]) => cfg.supported)
-  .map(([id]) => id)) as GameId[];
+  apex: limited(
+    'apex',
+    'Apex Legends only lets you change reticle colors, not the crosshair shape. Pick a color here and match it in-game.',
+    'Settings → Gameplay → Reticle Customization',
+    'Apex Legends'
+  ),
+  cod: limited(
+    'cod',
+    'Call of Duty offers only a few preset crosshair styles. Use the color here as a reference and choose the closest preset.',
+    'Settings → Interface → Crosshair',
+    'Call of Duty'
+  ),
+  r6: limited(
+    'r6',
+    'Rainbow Six Siege uses fixed reticles. You can only change the reticle color in-game.',
+    'Options → Display → Reticle',
+    'Rainbow Six Siege'
+  ),
+  fortnite: limited(
+    'fortnite',
+    'Fortnite has no crosshair customization. The preview is just a reference for overlay or aim-trainer setups.',
+    'Settings → Game',
+    'Fortnite'
+  ),
+};
 
 export function getCrosshairConfig(gameId: GameId): GameCrosshairConfig {
   return GAME_CROSSHAIR_CONFIGS[gameId];

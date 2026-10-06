@@ -74,7 +74,7 @@ export function PlayerInput({
         </div>
       )}
 
-      <div className="grid grid-cols-2 gap-3 rounded-md border border-border bg-base-surface-2 p-4">
+      <div className="grid grid-cols-2 gap-3 rounded-lg border border-border bg-base-surface-2 p-4">
         <div>
           <p className="text-xs font-medium uppercase tracking-wider text-ink-dim">
             eDPI

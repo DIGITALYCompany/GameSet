@@ -1,90 +1,125 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { LogOut, Trash2, Crosshair, ArrowRight, Mail, Calendar } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Clock, Crown, Gamepad2, LayoutDashboard, Loader2, Settings, UserRound } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import { Avatar, type CloudTest, type ProfileData } from '@/components/account/AccountUI';
+import { OverviewSection } from '@/components/account/OverviewSection';
+import { ProfileSection } from '@/components/account/ProfileSection';
+import { GamesSection } from '@/components/account/GamesSection';
+import { HistorySection } from '@/components/account/HistorySection';
+import { PlanSection, TierBadge } from '@/components/account/PlanSection';
+import { SettingsSection } from '@/components/account/SettingsSection';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/lib/supabase';
-import { formatDateTime } from '@/utils/helpers';
-import { round } from '@/utils/calculations';
 import { saveSelectedGame } from '@/lib/storage';
-import type { GameId } from '@/types';
+import { cn } from '@/utils/cn';
+import type { AimTrainingScore } from '@/types';
 
-interface CloudTest {
-  id: string;
-  game_id: string;
-  game_name: string;
-  dpi: number;
-  sensitivity: number;
-  edpi: number;
-  cm360: number;
-  rounds: number;
-  initial_sensitivity: number;
-  fov: number | null;
-  created_at: string;
-}
+const TABS = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'profile', label: 'Profile', icon: UserRound },
+  { id: 'games', label: 'My games', icon: Gamepad2 },
+  { id: 'history', label: 'History', icon: Clock },
+  { id: 'premium', label: 'Plan', icon: Crown },
+  { id: 'settings', label: 'Settings', icon: Settings },
+] as const;
+
+type Tab = (typeof TABS)[number]['id'];
+
+const EMPTY_PROFILE: ProfileData = {
+  username: '',
+  subscription_tier: 'free',
+  subscription_status: null,
+  avatar_emoji: null,
+  main_game_id: null,
+};
 
 export function AccountPage() {
   const { user, signOut, loading } = useAuth();
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
-  const [savedUsername, setSavedUsername] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requested = searchParams.get('tab');
+  const tab: Tab = TABS.some((t) => t.id === requested) ? (requested as Tab) : 'overview';
+
+  const [profile, setProfile] = useState<ProfileData>(EMPTY_PROFILE);
   const [tests, setTests] = useState<CloudTest[]>([]);
-  const [savingName, setSavingName] = useState(false);
-  const [nameSaved, setNameSaved] = useState(false);
+  const [aimScores, setAimScores] = useState<AimTrainingScore[]>([]);
+  const [followed, setFollowed] = useState<string[]>([]);
+  const [dataLoading, setDataLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
-  const loadTests = useCallback(async () => {
-    if (!user) return;
-    const { data, error } = await supabase
-      .from('cloud_test_results')
-      .select('id, game_id, game_name, dpi, sensitivity, edpi, cm360, rounds, initial_sensitivity, fov, created_at')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false });
-    if (!error && data) {
-      setTests(data as CloudTest[]);
-    }
-  }, [user]);
+  const userId = user?.id;
 
-  const loadProfile = useCallback(async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from('profiles')
-      .select('username')
-      .eq('id', user.id)
-      .maybeSingle();
-    if (data?.username) {
-      setUsername(data.username);
-      setSavedUsername(data.username);
+  const loadAll = useCallback(async () => {
+    if (!userId) return;
+    setDataLoading(true);
+    try {
+      const [p, t, g, a] = await Promise.all([
+        supabase.from('profiles').select('username, subscription_tier, subscription_status, avatar_emoji, main_game_id').eq('id', userId).maybeSingle(),
+        supabase
+          .from('cloud_test_results')
+          .select('id, game_id, game_name, dpi, sensitivity, edpi, cm360, rounds, initial_sensitivity, fov, created_at')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false }),
+        supabase.from('user_games').select('game_id').eq('user_id', userId).order('created_at', { ascending: false }),
+        supabase
+          .from('aim_training_scores')
+          .select('id, game_mode, score, accuracy, avg_reaction_ms, duration_seconds, created_at')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(20),
+      ]);
+      setLoadError(Boolean(p.error || t.error || g.error || a.error));
+      if (p.data) setProfile({ ...EMPTY_PROFILE, ...(p.data as ProfileData), username: (p.data as ProfileData).username ?? '' });
+      if (t.data) setTests(t.data as CloudTest[]);
+      if (g.data) setFollowed(g.data.map((d: { game_id: string }) => d.game_id));
+      if (a.data) setAimScores(a.data as AimTrainingScore[]);
+    } catch {
+      setLoadError(true);
+    } finally {
+      setDataLoading(false);
     }
-  }, [user]);
+  }, [userId]);
 
   useEffect(() => {
     if (loading) return;
-    if (!user) {
-      navigate('/auth', { state: { from: '/account' } });
+    if (!userId) {
+      navigate('/');
       return;
     }
-    loadTests();
-    loadProfile();
-  }, [user, loading, navigate, loadTests, loadProfile]);
+    loadAll();
+  }, [userId, loading, navigate, loadAll]);
 
-  const handleSaveName = async () => {
-    if (!user || !username.trim()) return;
-    setSavingName(true);
-    await supabase
+  const saveProfile = async (patch: Partial<ProfileData>) => {
+    if (!user) return false;
+    const allowed: Partial<Pick<ProfileData, 'username' | 'avatar_emoji' | 'main_game_id'>> = {};
+    if ('username' in patch) allowed.username = patch.username;
+    if ('avatar_emoji' in patch) allowed.avatar_emoji = patch.avatar_emoji;
+    if ('main_game_id' in patch) allowed.main_game_id = patch.main_game_id;
+    const { data, error } = await supabase
       .from('profiles')
-      .upsert({ id: user.id, username: username.trim() });
-    setSavedUsername(username.trim());
-    setNameSaved(true);
-    setSavingName(false);
-    window.setTimeout(() => setNameSaved(false), 2000);
+      .update({ ...allowed, updated_at: new Date().toISOString() })
+      .eq('id', user.id)
+      .select('id')
+      .maybeSingle();
+    if (error || !data) return false;
+    setProfile((prev) => ({ ...prev, ...allowed }));
+    return true;
   };
 
-  const handleDeleteTest = async (id: string) => {
-    await supabase.from('cloud_test_results').delete().eq('id', id);
+  const deleteTest = async (id: string) => {
+    const { error } = await supabase.from('cloud_test_results').delete().eq('id', id);
+    if (error) return false;
     setTests((prev) => prev.filter((t) => t.id !== id));
+    return true;
+  };
+
+  const unfollow = async (gameId: string) => {
+    if (!user) return false;
+    const { error } = await supabase.from('user_games').delete().eq('user_id', user.id).eq('game_id', gameId);
+    if (error) return false;
+    setFollowed((prev) => prev.filter((id) => id !== gameId));
+    return true;
   };
 
   const handleSignOut = async () => {
@@ -92,167 +127,126 @@ export function AccountPage() {
     navigate('/');
   };
 
-  const handleQuickStart = (gameId: string) => {
-    saveSelectedGame(gameId);
-    navigate('/sensitivity');
+  const switchTab = (next: Tab) => {
+    setSearchParams(next === 'overview' ? {} : { tab: next });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (loading || !user) {
     return (
       <Layout>
         <div className="flex min-h-[60vh] items-center justify-center">
-          <p className="text-sm text-ink-muted">Loading...</p>
+          <Loader2 className="h-5 w-5 animate-spin text-ink-dim" />
         </div>
       </Layout>
     );
   }
 
+  const isPremium = profile.subscription_tier !== 'free';
+  const testCounts = tests.reduce<Record<string, number>>((acc, t) => {
+    acc[t.game_id] = (acc[t.game_id] || 0) + 1;
+    return acc;
+  }, {});
+  const joined = user.created_at
+    ? new Date(user.created_at).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })
+    : null;
+
   return (
     <Layout>
-      <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
-        <div className="mb-8 flex items-start justify-between">
-          <div>
-            <h1 className="font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
-              Account
-            </h1>
-            <p className="mt-2 text-base text-ink-muted">
-              Manage your profile and synced test history.
-            </p>
-          </div>
-          <Button variant="secondary" size="sm" onClick={handleSignOut}>
-            <LogOut className="h-4 w-4" />
-            Sign Out
-          </Button>
-        </div>
+      <div className="relative">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-72 bg-[radial-gradient(ellipse_at_top,rgba(142,59,255,0.12),transparent_70%)]" />
 
-        {/* Profile section */}
-        <Card className="mb-6">
-          <h2 className="font-display text-lg font-semibold text-ink">Profile</h2>
-          <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:items-end">
-            <div className="flex-1">
-              <Input
-                label="Display name"
-                name="username"
-                placeholder="Player1"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
+        <div className="relative mx-auto max-w-6xl px-4 pb-16 pt-10 sm:px-6 sm:pt-14">
+          <header className="flex flex-col gap-5 sm:flex-row sm:items-center">
+            <Avatar value={profile.avatar_emoji} size="lg" />
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-3">
+                <h1 className="truncate font-display text-3xl font-semibold tracking-tight text-ink sm:text-4xl">
+                  {profile.username || 'Player'}
+                </h1>
+                <TierBadge tier={profile.subscription_tier} />
+              </div>
+              <p className="mt-1.5 text-sm text-ink-muted">
+                {user.email}
+                {joined && <span className="text-ink-dim"> · Member since {joined}</span>}
+              </p>
             </div>
-            <Button
-              variant="primary"
-              onClick={handleSaveName}
-              disabled={savingName || !username.trim() || username.trim() === savedUsername}
-            >
-              {nameSaved ? 'Saved!' : 'Save Name'}
-            </Button>
-          </div>
-          <div className="mt-4 flex items-center gap-4 text-sm text-ink-muted">
-            <span className="flex items-center gap-1.5">
-              <Mail className="h-4 w-4" />
-              {user.email}
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Calendar className="h-4 w-4" />
-              Joined {formatDateTime(user.created_at)}
-            </span>
-          </div>
-        </Card>
+          </header>
 
-        {/* Quick start */}
-        <Card className="mb-6">
-          <h2 className="font-display text-lg font-semibold text-ink">Quick Start</h2>
-          <p className="mt-1 text-sm text-ink-muted">
-            Jump straight into a sensitivity test for your game.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {(['valorant', 'cs2', 'apex', 'cod'] as GameId[]).map((gid) => (
-              <button
-                key={gid}
-                onClick={() => handleQuickStart(gid)}
-                className="inline-flex items-center gap-2 rounded-md border border-border bg-base-surface-2 px-4 py-2 text-sm font-medium text-ink-muted transition-colors hover:border-white/15 hover:text-ink focus-ring"
-              >
-                {gid === 'cs2' ? 'CS2' : gid.charAt(0).toUpperCase() + gid.slice(1)}
-                <ArrowRight className="h-3.5 w-3.5" />
+          {loadError && (
+            <div role="alert" className="mt-6 flex items-center justify-between gap-4 rounded-xl border border-accent-red/20 bg-accent-red/[0.06] px-4 py-3 text-sm">
+              <span className="text-ink">Some of your data could not be loaded.</span>
+              <button type="button" onClick={loadAll} className="font-medium text-accent-red hover:underline focus-ring rounded">
+                Retry
               </button>
-            ))}
-          </div>
-        </Card>
-
-        {/* Cloud test history */}
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold text-ink">
-            Synced Test History
-          </h2>
-          <span className="text-sm text-ink-dim">{tests.length} results</span>
-        </div>
-
-        {tests.length === 0 ? (
-          <Card className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="flex h-12 w-12 items-center justify-center rounded-md bg-base-surface-3">
-              <Crosshair className="h-6 w-6 text-ink-dim" />
             </div>
-            <p className="mt-4 text-sm text-ink-muted">
-              No synced tests yet. Complete a test and save it to sync here.
-            </p>
-            <Link to="/sensitivity" className="mt-4">
-              <Button variant="primary" size="sm">
-                <Crosshair className="h-4 w-4" />
-                Find Your Sensitivity
-              </Button>
-            </Link>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {tests.map((test) => (
-              <Card
-                key={test.id}
-                hover
-                className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-base-surface-3">
-                    <Crosshair className="h-5 w-5 text-accent-purple" />
-                  </div>
-                  <div>
-                    <p className="font-display text-sm font-semibold text-ink">
-                      {test.game_name}
-                    </p>
-                    <p className="text-xs text-ink-dim">
-                      {formatDateTime(test.created_at)} · {test.rounds} rounds
-                    </p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 gap-3 sm:flex sm:items-center sm:gap-5">
-                  <div>
-                    <p className="text-xs text-ink-dim">Sens</p>
-                    <p className="font-mono text-sm font-bold text-ink">
-                      {round(Number(test.sensitivity), 2)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-ink-dim">eDPI</p>
-                    <p className="font-mono text-sm font-bold text-ink">
-                      {round(Number(test.edpi), 0)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-ink-dim">cm/360</p>
-                    <p className="font-mono text-sm font-bold text-ink">
-                      {round(Number(test.cm360), 1)}
-                    </p>
+          )}
+
+          <div className="mt-10 grid gap-8 lg:grid-cols-[220px_1fr] lg:gap-12">
+            <nav aria-label="Account sections" className="-mx-4 overflow-x-auto px-4 lg:mx-0 lg:overflow-visible lg:px-0">
+              <ul className="flex gap-1 lg:sticky lg:top-24 lg:flex-col">
+                {TABS.map(({ id, label, icon: Icon }) => {
+                  const active = tab === id;
+                  return (
+                    <li key={id}>
+                      <button
+                        type="button"
+                        onClick={() => switchTab(id)}
+                        aria-current={active ? 'page' : undefined}
+                        className={cn(
+                          'group relative flex w-full items-center gap-3 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 focus-ring',
+                          active ? 'bg-white/[0.06] text-ink' : 'text-ink-muted hover:bg-white/[0.03] hover:text-ink'
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            'absolute left-0 top-1/2 hidden h-4 w-0.5 -translate-y-1/2 rounded-full bg-accent-purple transition-opacity lg:block',
+                            active ? 'opacity-100' : 'opacity-0'
+                          )}
+                        />
+                        <Icon className={cn('h-4 w-4', active ? 'text-accent-purple-light' : 'text-ink-dim group-hover:text-ink-muted')} />
+                        {label}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+
+            <div key={tab} className="min-w-0 animate-fade-in">
+              {dataLoading ? (
+                <div className="space-y-4">
+                  <div className="h-44 animate-pulse rounded-2xl bg-white/[0.03]" />
+                  <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+                    {[0, 1, 2, 3].map((i) => <div key={i} className="h-24 animate-pulse rounded-xl bg-white/[0.03]" />)}
                   </div>
                 </div>
-                <button
-                  onClick={() => handleDeleteTest(test.id)}
-                  className="shrink-0 rounded-md p-2 text-ink-dim transition-colors hover:bg-red-500/10 hover:text-red-400 focus-ring"
-                  aria-label="Delete test"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </Card>
-            ))}
+              ) : (
+                <>
+                  {tab === 'overview' && (
+                    <OverviewSection tests={tests} aimScores={aimScores} followedCount={followed.length} onOpenHistory={() => switchTab('history')} />
+                  )}
+                  {tab === 'profile' && <ProfileSection profile={profile} email={user.email ?? ''} onSave={saveProfile} />}
+                  {tab === 'games' && (
+                    <GamesSection
+                      followedIds={followed}
+                      testCounts={testCounts}
+                      isPremium={isPremium}
+                      onQuickStart={(id) => {
+                        saveSelectedGame(id);
+                        navigate('/sensitivity');
+                      }}
+                      onUnfollow={unfollow}
+                    />
+                  )}
+                  {tab === 'history' && <HistorySection tests={tests} aimScores={aimScores} isPremium={isPremium} onDeleteTest={deleteTest} />}
+                  {tab === 'premium' && <PlanSection tier={profile.subscription_tier} status={profile.subscription_status} />}
+                  {tab === 'settings' && <SettingsSection isPremium={isPremium} onSignOut={handleSignOut} />}
+                </>
+              )}
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </Layout>
   );

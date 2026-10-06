@@ -29,11 +29,11 @@ export function Input({
         <input
           id={inputId}
           className={cn(
-            'w-full rounded-md border border-border bg-base-surface-2 px-4 py-2.5 text-ink',
-            'placeholder:text-ink-dim transition-colors duration-150',
-            'focus:border-accent-purple focus:outline-none focus:ring-1 focus:ring-accent-purple',
+            'w-full rounded-lg border border-white/[0.08] bg-black/30 px-4 py-2.5 text-ink shadow-[inset_0_1px_2px_rgba(0,0,0,0.4)] hover:border-white/[0.14]',
+            'placeholder:text-ink-dim transition-all duration-200',
+            'focus:border-accent-purple/60 focus:outline-none focus:ring-2 focus:ring-accent-purple/20 focus:bg-base-surface-3',
             suffix && 'pr-14',
-            error && 'border-red-500/50',
+            error && 'border-accent-red/50 focus:border-accent-red focus:ring-accent-red/20',
             className
           )}
           {...props}
@@ -44,7 +44,7 @@ export function Input({
           </span>
         )}
       </div>
-      {error && <span className="text-xs text-red-400">{error}</span>}
+      {error && <span className="text-xs text-accent-red">{error}</span>}
     </div>
   );
 }

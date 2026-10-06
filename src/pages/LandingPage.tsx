@@ -1,154 +1,103 @@
-import { Link } from 'react-router-dom';
-import { ArrowRight, Crosshair, Layers } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
-import { ToolCard } from '@/components/ui/ToolCard';
-import { getAvailableTools, getComingSoonTools } from '@/data/tools';
-import { ProgressBar } from '@/components/ui/ProgressBar';
+﻿import { Link } from "react-router-dom";
+import { ArrowRight, Crosshair, ShieldCheck, Zap } from "lucide-react";
+import { Layout } from "@/components/layout/Layout";
+import { LandingSections } from "@/components/landing/LandingSections";
+import { AimLabPreview } from "@/components/landing/AimLabPreview";
+import { QuickAccess } from '@/components/landing/QuickAccess';
+import { getAvailableTools } from "@/data/tools";
+import { GAMES } from "@/data/games";
 
 export function LandingPage() {
-  const availableTools = getAvailableTools();
-  const comingSoon = getComingSoonTools().slice(0, 6);
-
   return (
-    <div>
-      {/* Hero */}
-      <section className="relative overflow-hidden border-b border-border">
-        <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6 sm:py-28 lg:py-36">
-          <div className="grid items-center gap-12 lg:grid-cols-2">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-md border border-border bg-base-surface px-3 py-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-accent-purple" />
-                <span className="text-xs font-medium text-ink-muted">
-                  GAMESET Beta
+    <Layout>
+      <section className="arena-hero relative overflow-hidden">
+        <div className="hero-orbit" aria-hidden="true" />
+        <div className="relative mx-auto max-w-6xl px-4 pb-12 pt-12 sm:px-6 sm:pb-16 sm:pt-16 lg:pb-20 lg:pt-20">
+          <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_1fr] lg:gap-10">
+            <div className="relative z-10 animate-slide-up">
+              <p className="eyebrow flex items-center gap-2">
+                <span className="status-dot" /> YOUR NEXT LEVEL STARTS HERE
+              </p>
+              <h1 className="hero-title mt-6 font-display font-bold text-ink">
+                Your aim.
+                <br />
+                Your settings.
+                <br />
+                <span className="hero-gradient">Your advantage.</span>
+              </h1>
+              <p className="mt-6 max-w-md text-base leading-relaxed text-ink-muted sm:text-lg">
+                Stop guessing. Find the sensitivity that clicks, build your
+                crosshair and put your aim to the test.
+              </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link to="/sensitivity" className="arena-primary focus-ring">
+                  <Crosshair className="h-4 w-4" /> Find my sensitivity{" "}
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link to="/tools" className="arena-secondary focus-ring">
+                  Explore the toolkit <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+              <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-xs text-ink-muted">
+                <span className="flex items-center gap-1.5">
+                  <ShieldCheck className="h-3.5 w-3.5 text-accent-green" /> No
+                  account needed
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <Zap className="h-3.5 w-3.5 text-accent-green" /> Runs in your
+                  browser
                 </span>
               </div>
-
-              <h1 className="mt-6 font-display text-4xl font-bold leading-tight tracking-tight text-ink sm:text-5xl lg:text-6xl">
-                Find your perfect
-                <br />
-                <span className="text-accent-purple">sensitivity.</span>
-              </h1>
-
-              <p className="mt-5 max-w-md text-base leading-relaxed text-ink-muted sm:text-lg">
-                Test, compare and fine-tune your FPS sensitivity with a
-                structured calibration process.
-              </p>
-
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link to="/sensitivity">
-                  <Button variant="primary" size="lg">
-                    <Crosshair className="h-5 w-5" />
-                    Find My Sensitivity
-                  </Button>
-                </Link>
-                <Link to="/tools">
-                  <Button variant="secondary" size="lg">
-                    <Layers className="h-5 w-5" />
-                    Explore Tools
-                  </Button>
-                </Link>
+              <div className="hero-stats mt-9 grid max-w-md grid-cols-3">
+                {[
+                  {
+                    value: String(getAvailableTools().length).padStart(2, "0"),
+                    label: "FREE TOOLS",
+                  },
+                  {
+                    value: String(GAMES.length).padStart(2, "0"),
+                    label: "FPS GAMES",
+                  },
+                  { value: "01", label: "PLACE TO LEVEL UP" },
+                ].map((stat) => (
+                  <div key={stat.label}>
+                    <span className="font-display text-2xl font-semibold text-ink sm:text-3xl">
+                      {stat.value}
+                      <span className="text-accent-purple-light">.</span>
+                    </span>
+                    <p className="mt-1 font-mono text-[9px] tracking-wider text-ink-muted">
+                      {stat.label}
+                    </p>
+                  </div>
+                ))}
               </div>
             </div>
-
-            {/* Preview card */}
-            <div className="hidden lg:block">
-              <PreviewCard />
-            </div>
+            <AimLabPreview />
+          </div>
+        </div>
+        <div className="game-ribbon relative border-y border-white/[0.08]">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-6 gap-y-3 px-4 py-5 sm:justify-between sm:px-6">
+            <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-ink-muted">
+              One toolkit. Every arena.
+            </span>
+            {GAMES.slice(0, 5).map((game) => (
+              <Link
+                key={game.id}
+                to={`/games/${game.slug}`}
+                className="rounded font-display text-xs font-semibold uppercase tracking-wider text-ink-muted transition-colors hover:text-ink focus-ring"
+              >
+                {game.id === "cod"
+                  ? "WARZONE"
+                  : game.id === "r6"
+                    ? "RAINBOW SIX"
+                    : game.name}
+              </Link>
+            ))}
           </div>
         </div>
       </section>
-
-      {/* Preview card on mobile */}
-      <section className="border-b border-border px-4 py-8 lg:hidden sm:px-6">
-        <PreviewCard />
-      </section>
-
-      {/* Available tools */}
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
-        <div className="flex items-end justify-between">
-          <div>
-            <h2 className="font-display text-2xl font-bold text-ink sm:text-3xl">
-              Available now
-            </h2>
-            <p className="mt-2 text-sm text-ink-muted">
-              Tools you can use right now, with more on the way.
-            </p>
-          </div>
-          <Link to="/tools" className="hidden shrink-0 text-sm font-medium text-accent-purple transition-colors hover:text-accent-magenta sm:block">
-            View all tools →
-          </Link>
-        </div>
-
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {availableTools.map((tool) => (
-            <ToolCard key={tool.id} tool={tool} />
-          ))}
-        </div>
-      </section>
-
-      {/* Coming tools */}
-      <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20 border-t border-border">
-        <div className="flex items-end justify-between">
-          <div>
-            <h2 className="font-display text-2xl font-bold text-ink sm:text-3xl">
-              Coming tools
-            </h2>
-            <p className="mt-2 text-sm text-ink-muted">
-              GAMESET is built to grow into a complete gaming toolkit.
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {comingSoon.map((tool) => (
-            <ToolCard key={tool.id} tool={tool} />
-          ))}
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function PreviewCard() {
-  return (
-    <Card noPadding className="overflow-hidden">
-      {/* Mock Sensitivity Finder interface */}
-      <div className="border-b border-border px-5 py-4">
-        <div className="flex items-center justify-between">
-          <span className="font-display text-sm font-bold tracking-tight text-ink">
-            Sensitivity Finder
-          </span>
-          <span className="text-xs text-ink-dim">Round 3 / 7</span>
-        </div>
-        <ProgressBar current={3} total={7} className="mt-3" />
-      </div>
-      <div className="grid grid-cols-2 gap-3 p-5">
-        <div className="flex flex-col items-center justify-center rounded-md border border-border bg-base-surface-2 py-8">
-          <span className="font-display text-xs font-bold uppercase tracking-[0.2em] text-ink-muted">
-            Low
-          </span>
-          <span className="mt-2 font-mono text-3xl font-bold text-ink">
-            0.420
-          </span>
-        </div>
-        <div className="flex flex-col items-center justify-center rounded-md border border-accent-purple/40 bg-accent-purple/5 py-8">
-          <span className="font-display text-xs font-bold uppercase tracking-[0.2em] text-accent-purple">
-            High
-          </span>
-          <span className="mt-2 font-mono text-3xl font-bold text-accent-purple">
-            0.560
-          </span>
-        </div>
-      </div>
-      <div className="px-5 pb-5">
-        <div className="flex items-center gap-2 rounded-md border border-border bg-base-surface-2 px-4 py-3">
-          <ArrowRight className="h-4 w-4 text-ink-muted" />
-          <span className="text-sm text-ink-muted">
-            Choose which sensitivity felt better
-          </span>
-        </div>
-      </div>
-    </Card>
+      <QuickAccess />
+      <LandingSections />
+    </Layout>
   );
 }

@@ -15,10 +15,10 @@ export function Card({
   return (
     <div
       className={cn(
-        'rounded-lg border border-border bg-base-surface',
+        'card-sheen relative rounded-xl border border-border bg-base-surface shadow-card transition-all duration-300 ease-smooth',
         !noPadding && 'p-6',
         hover &&
-          'transition-colors duration-150 hover:border-white/15 hover:bg-base-surface-2',
+          'hover:border-white/10 hover:bg-base-surface-2 hover:-translate-y-[3px] hover:shadow-card-hover',
         className
       )}
       {...props}

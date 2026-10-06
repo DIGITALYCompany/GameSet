@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { useWorkspace } from '@/hooks/useWorkspace';
+import { createPortal } from 'react-dom';
 import { Crosshair, Settings2, ArrowRight, RotateCcw } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Card } from '@/components/ui/Card';
@@ -6,6 +9,8 @@ import { Button } from '@/components/ui/Button';
 import { GameSelector } from '@/components/sensitivity/GameSelector';
 import { PlayerInput } from '@/components/sensitivity/PlayerInput';
 import { ComparisonView } from '@/components/sensitivity/ComparisonView';
+import { FloatingComparison, FloatingResult } from '@/components/sensitivity/FloatingComparison';
+import { useFloatingWindow } from '@/hooks/useFloatingWindow';
 import { ResultView } from '@/components/sensitivity/ResultView';
 import { SensitivityFinderEngine } from '@/lib/sensitivityFinderEngine';
 import {
@@ -19,12 +24,16 @@ import { useAuth } from '@/hooks/useAuth';
 import { getGame } from '@/data/games';
 import { calcEdpi, calcCm360 } from '@/utils/calculations';
 import { generateId } from '@/utils/helpers';
+import { cn } from '@/utils/cn';
 import type { GameConfig, GameId, SensitivityResult } from '@/types';
 
 type Phase = 'setup' | 'testing' | 'result';
 
 export function SensitivityPage() {
+  const [searchParams] = useSearchParams();
+  const { data: workspace } = useWorkspace();
   const { user } = useAuth();
+  const floating = useFloatingWindow();
 
   // Setup state
   const [phase, setPhase] = useState<Phase>('setup');
@@ -43,6 +52,7 @@ export function SensitivityPage() {
     totalRounds: 7,
     lower: 0,
     higher: 0,
+    gapPercent: 0,
   });
   const [resultData, setResultData] = useState<{
     sensitivity: number;
@@ -60,7 +70,7 @@ export function SensitivityPage() {
     const settings = getSettings();
     setRounds(settings.defaultRounds);
 
-    const savedGameId = getSelectedGame();
+    const savedGameId = searchParams.get('game') || getSelectedGame();
     if (savedGameId) {
       const game = getGame(savedGameId as GameId);
       if (game) {
@@ -68,7 +78,7 @@ export function SensitivityPage() {
         setSensitivity(String(game.defaultSens));
       }
     }
-  }, []);
+  }, [searchParams]);
 
   const handleGameSelect = (game: GameConfig) => {
     setSelectedGame(game);
@@ -78,6 +88,15 @@ export function SensitivityPage() {
     if (!sensitivity) {
       setSensitivity(String(game.defaultSens));
     }
+  };
+
+  const loadMySetup = () => {
+    const setup = workspace.setups.find(item => item.gameId === selectedGame?.id);
+    if (!setup) return;
+    setDpi(String(setup.dpi));
+    setSensitivity(String(setup.sensitivity));
+    setDpiError('');
+    setSensError('');
   };
 
   const validateAndStart = () => {
@@ -100,9 +119,9 @@ export function SensitivityPage() {
     if (isNaN(sensNum) || sensNum <= 0) {
       setSensError('Enter a valid sensitivity');
       hasError = true;
-    } else if (sensNum < selectedGame.sensRange.min || sensNum > selectedGame.sensRange.max) {
+    } else if (sensNum < selectedGame.sensScale.min || sensNum > selectedGame.sensScale.max) {
       setSensError(
-        `Sensitivity range: ${selectedGame.sensRange.min}–${selectedGame.sensRange.max}`
+        `Valid range: ${selectedGame.sensDisplay}`
       );
       hasError = true;
     } else {
@@ -114,29 +133,24 @@ export function SensitivityPage() {
     // Create engine and start test
     const engine = new SensitivityFinderEngine(sensNum, rounds);
     engineRef.current = engine;
-    setComparison(engine.getCurrentComparison());
+    syncComparison(engine);
     setPhase('testing');
   };
 
-  const handleLower = () => {
-    const engine = engineRef.current;
-    if (!engine) return;
-    engine.selectLower();
-    if (engine.phase === 'result') {
-      finishTest();
-    } else {
-      setComparison(engine.getCurrentComparison());
-    }
+  const syncComparison = (engine: SensitivityFinderEngine) => {
+    setComparison({ ...engine.getCurrentComparison(), gapPercent: engine.currentGapPercent });
   };
 
-  const handleHigher = () => {
+  const handleChoice = (choice: 'lower' | 'higher' | 'same') => {
     const engine = engineRef.current;
     if (!engine) return;
-    engine.selectHigher();
+    if (choice === 'lower') engine.selectLower();
+    else if (choice === 'higher') engine.selectHigher();
+    else engine.selectSame();
     if (engine.phase === 'result') {
       finishTest();
     } else {
-      setComparison(engine.getCurrentComparison());
+      syncComparison(engine);
     }
   };
 
@@ -157,7 +171,7 @@ export function SensitivityPage() {
       edpi,
       cm360,
       gameName: selectedGame.name,
-      rounds: engine.totalRounds,
+      rounds: engine.round,
       initialSensitivity: engine.startingSensitivity,
     });
     setSaved(false);
@@ -208,6 +222,7 @@ export function SensitivityPage() {
   };
 
   const handleRunAgain = () => {
+    floating.close();
     setPhase('setup');
     setResultData(null);
     setSaved(false);
@@ -217,27 +232,64 @@ export function SensitivityPage() {
   const handleExitTest = () => {
     setPhase('setup');
     engineRef.current = null;
+    floating.close();
   };
 
-  // Focused testing view — no nav, no footer
+  const handleRestartTest = () => {
+    const current = engineRef.current;
+    if (!current) return;
+    const engine = new SensitivityFinderEngine(current.startingSensitivity, rounds);
+    engineRef.current = engine;
+    syncComparison(engine);
+  };
+
+  const floatingTarget = floating.floatingWindow;
+
   if (phase === 'testing') {
     return (
-      <ComparisonView
-        round={comparison.round}
-        totalRounds={comparison.totalRounds}
-        lower={comparison.lower}
-        higher={comparison.higher}
-        onLower={handleLower}
-        onHigher={handleHigher}
-        onExit={handleExitTest}
-      />
+      <>
+        <ComparisonView
+          round={comparison.round}
+          totalRounds={comparison.totalRounds}
+          lower={comparison.lower}
+          higher={comparison.higher}
+          gapPercent={comparison.gapPercent}
+          onChoose={handleChoice}
+          onExit={handleExitTest}
+          onRestart={handleRestartTest}
+          canDetach={floating.supported}
+          detached={!!floatingTarget}
+          onDetach={() => floating.open(340, 380)}
+          onReattach={floating.close}
+        />
+        {floatingTarget &&
+          createPortal(
+            <FloatingComparison
+              round={comparison.round}
+              totalRounds={comparison.totalRounds}
+              lower={comparison.lower}
+              higher={comparison.higher}
+              gapPercent={comparison.gapPercent}
+              onChoose={handleChoice}
+              onReattach={floating.close}
+              onRestart={handleRestartTest}
+              target={floatingTarget}
+            />,
+            floatingTarget.document.body
+          )}
+      </>
     );
   }
 
-  // Focused result view
   if (phase === 'result' && resultData) {
     return (
-      <ResultView
+      <>
+        {floatingTarget &&
+          createPortal(
+            <FloatingResult sensitivity={resultData.sensitivity} gameName={resultData.gameName} onClose={floating.close} />,
+            floatingTarget.document.body
+          )}
+        <ResultView
         sensitivity={resultData.sensitivity}
         dpi={resultData.dpi}
         edpi={resultData.edpi}
@@ -249,6 +301,7 @@ export function SensitivityPage() {
         onRunAgain={handleRunAgain}
         saved={saved}
       />
+      </>
     );
   }
 
@@ -258,11 +311,9 @@ export function SensitivityPage() {
       <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-14">
         {/* Header */}
         <div className="mb-8">
-          <div className="inline-flex items-center gap-2 rounded-md border border-border bg-base-surface px-3 py-1.5">
+          <div className="badge">
             <Crosshair className="h-3.5 w-3.5 text-accent-purple" />
-            <span className="text-xs font-medium text-ink-muted">
-              Sensitivity Finder
-            </span>
+            <span className="text-ink-muted">Sensitivity Finder</span>
           </div>
           <h1 className="mt-4 font-display text-3xl font-bold tracking-tight text-ink sm:text-4xl">
             Sensitivity Finder
@@ -286,6 +337,8 @@ export function SensitivityPage() {
         <StepHeader number={2} title="Enter your current settings" />
         <Card className="mb-6 mt-3">
           {selectedGame ? (
+            <>
+            {workspace.setups.some(item => item.gameId === selectedGame.id) && <button type="button" onClick={loadMySetup} className="mb-4 rounded text-xs text-accent-purple-light focus-ring">Use my saved {selectedGame.name} setup</button>}
             <PlayerInput
               game={selectedGame}
               dpi={dpi}
@@ -297,6 +350,7 @@ export function SensitivityPage() {
               onSensitivityChange={setSensitivity}
               onFovChange={setFov}
             />
+            </>
           ) : (
             <p className="py-8 text-center text-sm text-ink-dim">
               Select a game to enter your settings
@@ -309,25 +363,33 @@ export function SensitivityPage() {
         <Card className="mb-8 mt-3">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-medium text-ink">Number of rounds</p>
-              <p className="mt-1 text-xs text-ink-muted">
-                More rounds = more precision, but takes longer
+              <p className="text-sm font-medium text-ink">Test depth</p>
+              <p className="mt-1 max-w-xs text-xs leading-relaxed text-ink-muted">
+                Each round narrows the search. Deeper tests pin your sensitivity
+                down more precisely. You can finish early anytime both values feel the same.
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              {[5, 7, 10].map((r) => (
+            <div className="grid grid-cols-3 gap-2">
+              {ROUND_PRESETS.map((preset) => (
                 <button
-                  key={r}
+                  key={preset.rounds}
                   type="button"
-                  onClick={() => setRounds(r)}
-                  aria-pressed={rounds === r}
-                  className={
-                    rounds === r
-                      ? 'rounded-md border border-accent-purple bg-accent-purple/10 px-4 py-2 text-sm font-semibold text-accent-purple focus-ring'
-                      : 'rounded-md border border-border bg-base-surface-2 px-4 py-2 text-sm font-medium text-ink-muted transition-colors hover:border-white/15 hover:text-ink focus-ring'
-                  }
+                  onClick={() => setRounds(preset.rounds)}
+                  aria-pressed={rounds === preset.rounds}
+                  className={cn(
+                    'flex flex-col items-center rounded-lg border px-4 py-2.5 transition-all duration-200 focus-ring',
+                    rounds === preset.rounds
+                      ? 'border-accent-purple bg-accent-purple/10 text-accent-purple shadow-glow-sm'
+                      : 'border-border bg-base-surface-2 text-ink-muted hover:border-white/15 hover:text-ink hover:bg-base-surface-3'
+                  )}
                 >
-                  {r}
+                  <span className="text-sm font-semibold">{preset.label}</span>
+                  <span className="mt-0.5 font-mono text-[11px] opacity-80">
+                    {preset.rounds} rounds
+                  </span>
+                  <span className="font-mono text-[11px] opacity-60">
+                    ±{SensitivityFinderEngine.precisionFor(preset.rounds).toFixed(1)}%
+                  </span>
                 </button>
               ))}
             </div>
@@ -356,12 +418,14 @@ export function SensitivityPage() {
         </div>
 
         {/* Info note */}
-        <div className="mt-6 flex items-start gap-3 rounded-md border border-border bg-base-surface-2 p-4">
+        <div className="mt-6 flex items-start gap-3 rounded-xl border border-border bg-base-surface-2 p-4">
           <Settings2 className="mt-0.5 h-4 w-4 shrink-0 text-ink-dim" />
           <p className="text-sm leading-relaxed text-ink-muted">
-            You'll be presented with two sensitivity values each round. Test
-            both in your game and choose which felt better. The test takes about{' '}
-            {rounds} rounds and narrows your optimal range progressively.
+            Each round shows two values. Set each one in your game, do a few
+            flicks and tracking, then pick the one that felt better. Your result
+            will land within ±{SensitivityFinderEngine.precisionFor(rounds).toFixed(1)}%
+            of your ideal sensitivity, anywhere from half to one and a half times your
+            current value.
           </p>
         </div>
       </div>
@@ -369,10 +433,16 @@ export function SensitivityPage() {
   );
 }
 
+const ROUND_PRESETS = [
+  { rounds: 5, label: 'Quick' },
+  { rounds: 7, label: 'Balanced' },
+  { rounds: 10, label: 'Precise' },
+];
+
 function StepHeader({ number, title }: { number: number; title: string }) {
   return (
     <div className="flex items-center gap-3">
-      <span className="flex h-6 w-6 items-center justify-center rounded-md bg-base-surface-3 font-mono text-xs font-bold text-ink-muted">
+      <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-base-surface-3 font-mono text-xs font-bold text-ink-muted">
         {number}
       </span>
       <h2 className="font-display text-lg font-semibold text-ink">{title}</h2>
