@@ -26,6 +26,10 @@ const TrackingTrainerPage = lazy(() => import('@/pages/tools/TrackingTrainerPage
 const ReactionTimeTestPage = lazy(() => import('@/pages/tools/ReactionTimeTestPage').then((module) => ({ default: module.ReactionTimeTestPage })));
 const PollingRateTestPage = lazy(() => import('@/pages/tools/PollingRateTestPage').then((module) => ({ default: module.PollingRateTestPage })));
 
+const AuthPage = lazy(() => import('@/pages/AuthPage').then(module => ({ default: module.AuthPage })));
+const AuthCallbackPage = lazy(() => import('@/pages/AuthRecoveryPage').then(module => ({ default: module.AuthCallbackPage })));
+const ResetPasswordPage = lazy(() => import('@/pages/AuthRecoveryPage').then(module => ({ default: module.ResetPasswordPage })));
+
 export default function App() {
   return (
     <AuthProvider>
@@ -55,7 +59,9 @@ export default function App() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/privacy" element={<PrivacyPolicyPage />} />
           <Route path="/terms" element={<TermsOfServicePage />} />
-          <Route path="/auth" element={<Navigate to="/" replace />} />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/auth/callback" element={<AuthCallbackPage />} />
+          <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </Suspense>

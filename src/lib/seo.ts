@@ -87,6 +87,18 @@ const PAGES: Record<string, PageMetadata> = {
     label: "Settings",
     index: false,
   },
+  "/auth/callback": {
+    title: "Completing Sign In | GAMESET",
+    description: "Complete your GameSet sign-in.",
+    label: "Sign in",
+    index: false,
+  },
+  "/auth/reset-password": {
+    title: "Reset Password | GAMESET",
+    description: "Choose a new password for your GameSet account.",
+    label: "Reset password",
+    index: false,
+  },
   "/auth": {
     title: "Sign In | GAMESET",
     description: "Sign in to your GameSet account.",
